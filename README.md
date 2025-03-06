@@ -1,4 +1,4 @@
-# ai-chat-electron
+# AIChat
 
 An Electron application with Vue and TypeScript
 

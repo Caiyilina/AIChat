@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: ai-chat-electron
+productName: AIChat
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: ai-chat-electron
+  executableName: AIChat
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
