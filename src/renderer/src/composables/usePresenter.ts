@@ -13,7 +13,7 @@ function createProxy(presenterName: string) {
     get(_, functionName) {
       return (...payloads: []) => {
         const rawPayloads = payloads.map((e) => toRaw(e))
-        // 向主进城发送消息
+        // 向主进程发送消息
         return window.electron.ipcRenderer
           .invoke('presenter:call', presenterName, functionName, ...rawPayloads)
           .catch((e: Error) => {

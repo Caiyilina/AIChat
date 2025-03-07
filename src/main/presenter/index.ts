@@ -141,7 +141,7 @@ export class Presenter implements IPresenter {
 }
 export const presenter = new Presenter()
 ipcMain.handle(
-  'presenter.call',
+  'presenter:call',
   (_event: IpcMainInvokeEvent, name: string, method: string, ...payloads: unknown[]) => {
     try {
       const calledPresenter = presenter[name]
