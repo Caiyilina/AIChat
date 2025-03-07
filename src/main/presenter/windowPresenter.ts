@@ -93,7 +93,7 @@ export class WindowPresenter implements IWindowPresenter {
         y: 10
       }, // 窗口流量灯位置-- 仅 macOS
       webPreferences: {
-        preload: path.join(app.getAppPath(), 'preload.js'), // 预加载脚本
+        preload: path.join(__dirname, '../preload/index.mjs'),
         sandbox: false, // 沙箱模式
         devTools: is.dev // 开发工具
       },

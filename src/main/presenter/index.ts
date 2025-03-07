@@ -5,6 +5,7 @@ import { eventBus } from '@/eventbus'
 import { CONFIG_EVENTS, WINDOW_EVENTS } from '@/event'
 import { app, ipcMain, IpcMainInvokeEvent } from 'electron'
 import { IPresenter } from '@shared/presenter'
+import { DevicePresenter } from './devicePresenter'
 
 export class Presenter implements IPresenter {
   windowPresenter: WindowPresenter
@@ -12,7 +13,7 @@ export class Presenter implements IPresenter {
   // llmproviderPresenter: LLMProviderPresenter
   configPresenter: ConfigPresenter
   // threadPresenter: ThreadPresenter
-  // devicePresenter: DevicePresenter
+  devicePresenter: DevicePresenter
   // upgradePresenter: UpgradePresenter
   // shortcutPresenter: ShortcutPresenter
   // filePresenter: FilePresenter
@@ -22,7 +23,7 @@ export class Presenter implements IPresenter {
     this.configPresenter = new ConfigPresenter()
     this.windowPresenter = new WindowPresenter(this.configPresenter)
     // this.llmproviderPresenter = new LLMProviderPresenter(this.configPresenter)
-    // this.devicePresenter = new DevicePresenter()
+    this.devicePresenter = new DevicePresenter()
     // 初始化 SQLite 数据库
     const dbDir = path.join(app.getPath('userData'), 'app_db')
     const dbPath = path.join(dbDir, 'chat.db')
