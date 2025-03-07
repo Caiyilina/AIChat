@@ -68,9 +68,41 @@ export type MODEL_META = {
   maxTokens: number
   description?: string
 }
+
+/**
+ * 设备管理类
+ */
+export interface IDevicePresenter {
+  getAppVersion(): Promise<string>
+  getDeviceInfo(): Promise<DeviceInfo>
+  getCPUUsage(): Promise<number>
+  getMemoryUsage(): Promise<MemoryInfo>
+  getDiskSpace(): Promise<DiskInfo>
+  resetData(): Promise<void>
+}
+export type DeviceInfo = {
+  platform: string
+  arch: string
+  cpuModel: string
+  totalMemory: number
+  osVersion: string
+}
+
+export type MemoryInfo = {
+  total: number
+  free: number
+  used: number
+}
+
+export type DiskInfo = {
+  total: number
+  free: number
+  used: number
+}
 /**
  * 全局管理类
  */
 export interface IPresenter {
   windowPresenter: IWindowPresenter
+  devicePresenter: IDevicePresenter
 }
