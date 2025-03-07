@@ -16,9 +16,19 @@ export default tseslint.config(
   },
   {
     files: ['**/*.{ts,mts,tsx,vue}'],
+    extends: [
+      'eslint:recommended',
+      'plugin:vue/vue3-recommended',
+      '@electron-toolkit',
+      '@electron-toolkit/eslint-config-ts/eslint-recommended',
+      '@vue/eslint-config-typescript/recommended',
+      '@vue/eslint-config-prettier'
+    ],
     rules: {
       'vue/require-default-prop': 'off',
-      'vue/multi-word-component-names': 'off'
+      'vue/multi-word-component-names': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+
     }
   },
   eslintConfigPrettier

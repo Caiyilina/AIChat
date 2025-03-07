@@ -120,7 +120,45 @@ export class WindowPresenter implements IWindowPresenter {
         mainWindow.hide()
       }
     })
+    mainWindow.on('closed',()=>{
+      this.windows.delete(MAIN_WIN)
+      eventBus.emit('main-window-closed',mainWindow)
+    })
 
+    // 处理新窗口打开的回调
+    mainWindow.webContents.setWindowOpenHandler((details)=>{
+      // 使用默认外部应用程序打开链接
+      shell.openExternal(details.url)
+      // 拒绝在主窗口中打开新窗口
+      return {action:'deny'}
+    })
+    mainWindow.webContents.on('will-navigate',(event,url)=>{
+      if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+        if (url.startsWith(process.env['ELECTRON_RENDERER_URL'] || '')) {
+          return
+        }
+      }
+      // 检查是否为外部链接
+      const isExternal = url.startsWith('http:') || url.startsWith('https:')
+      if (isExternal) {
+        event.preventDefault()
+        shell.openExternal(url)
+      }
+    })
+    mainWindow.on('show', () => {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore()
+      }
+    })
+    if (is.dev) {
+      mainWindow.webContents.openDevTools()
+    }
+    // TAG 重要
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+      mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    } else {
+      mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
+    }
     this.windows.set(MAIN_WIN, mainWindow)
 
     // 初始化托盘
