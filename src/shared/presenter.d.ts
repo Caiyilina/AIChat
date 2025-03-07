@@ -58,6 +58,16 @@ export type LLM_PROVIDER = {
   enable: boolean
   custom?: boolean
 }
+export type MODEL_META = {
+  id: string
+  name: string
+  group: string
+  providerId: string
+  isCustom: boolean
+  contextLength: number
+  maxTokens: number
+  description?: string
+}
 /**
  * 全局管理类
  */
