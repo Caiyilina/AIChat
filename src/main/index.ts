@@ -2,73 +2,57 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { presenter } from './presenter'
 
-function createWindow(): void {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
-    show: false,
-    autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  })
+// 添加开关选项
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required') //设置自动播放策略，自动播放
+app.commandLine.appendSwitch('webrtc-max-cpu-consumption-percentage', '100') //web实时通信最大CPU占用百分比
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=4096') //设置js引擎的堆内存大小
+app.commandLine.appendSwitch('ignore-certificate-errors') //忽略证书错误
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
-
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
-
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-  }
+if (process.platform === 'darwin') {
+  // macOS配置 禁用功能：桌面捕获
+  app.commandLine.appendSwitch('disable-features', 'DesktopCaptureMacV2,IOSurfaceCapturer')
 }
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.lune.aichat') //设置应用id
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+  // TODO 系统代理   proxyConfig.resolveProxy() 未添加
+
   app.on('browser-window-created', (_, window) => {
+    // 创建新浏览器窗口时，
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  // 创建主窗口
+  presenter.windowPresenter.createMainWindow()
+  // TODO
 
-  createWindow()
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length == 0) {
+      presenter.windowPresenter.createMainWindow()
+    } else {
+      presenter.windowPresenter.mainWindow?.show()
+    }
+  })
 
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  // 监听应用程序获得焦点事件
+  app.on('browser-window-focus', () => {
+    // presenter.shortcutPresenter.registerShortcuts()
+  })
+
+  // 监听应用程序失去焦点事件
+  app.on('browser-window-blur', () => {
+    // presenter.shortcutPresenter.unregisterShortcuts()
   })
 })
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
+  presenter.destroy()
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+app.on('before-quit', () => {
+  presenter.destroy()
+})
