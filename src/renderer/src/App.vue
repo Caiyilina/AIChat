@@ -1,9 +1,3 @@
-<script setup lang="ts">
-import AppBar from "./components/AppBar.vue"
-
-
-</script>
-
 <template>
   <div class="flex flex-col h-screen">
     <app-bar />
@@ -18,3 +12,23 @@ import AppBar from "./components/AppBar.vue"
     </div>
   </div>
 </template>
+<script setup lang="ts">
+import AppBar from './components/AppBar.vue'
+import { useRouter, useRoute } from 'vue-router'
+import { usePresenter } from '@/composables/usePresenter'
+import { onMounted } from 'vue'
+const router = useRouter()
+const route = useRoute()
+const configPresenter = usePresenter('configPresenter')
+
+const initTemplate = async () => {
+  const initComplete = await configPresenter.getSetting('init_complete')
+  console.log('初始化模板---', initComplete)
+  if (!initComplete) {
+    router.push({ name: 'welcome' })
+  }
+}
+onMounted(() => {
+  initTemplate()
+})
+</script>

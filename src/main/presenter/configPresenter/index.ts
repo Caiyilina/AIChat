@@ -1,4 +1,10 @@
-import { IConfigPresenter, LLM_PROVIDER, MODEL_META } from '@shared/presenter'
+import {
+  IConfigPresenter,
+  LLM_PROVIDER,
+  MODEL_META,
+  ModelConfig,
+  RENDERER_MODEL_META
+} from '@shared/presenter'
 import { app } from 'electron'
 import ElectronStore from 'electron-store'
 import path from 'path'
@@ -49,6 +55,63 @@ export class ConfigPresenter implements IConfigPresenter {
 
     // // 迁移旧的模型数据
     // this.migrateModelData()
+  }
+  setSetting<T>(key: string, value: T): void {
+    throw new Error('Method not implemented.')
+  }
+  getProviders(): LLM_PROVIDER[] {
+    throw new Error('Method not implemented.')
+  }
+  setProviders(providers: LLM_PROVIDER[]): void {
+    throw new Error('Method not implemented.')
+  }
+  getProviderById(id: string): LLM_PROVIDER | undefined {
+    throw new Error('Method not implemented.')
+  }
+  setProviderById(id: string, provider: LLM_PROVIDER): void {
+    throw new Error('Method not implemented.')
+  }
+  getProviderModels(providerId: string): MODEL_META[] {
+    throw new Error('Method not implemented.')
+  }
+  setProviderModels(providerId: string, models: MODEL_META[]): void {
+    throw new Error('Method not implemented.')
+  }
+  getEnabledProviders(): LLM_PROVIDER[] {
+    throw new Error('Method not implemented.')
+  }
+  getModelDefaultConfig(modelId: string): ModelConfig {
+    throw new Error('Method not implemented.')
+  }
+  getAllEnabledModels(): Promise<{ providerId: string; models: RENDERER_MODEL_META[] }[]> {
+    throw new Error('Method not implemented.')
+  }
+  getCustomModels(providerId: string): MODEL_META[] {
+    throw new Error('Method not implemented.')
+  }
+  setCustomModels(providerId: string, models: MODEL_META[]): void {
+    throw new Error('Method not implemented.')
+  }
+  addCustomModel(providerId: string, model: MODEL_META): void {
+    throw new Error('Method not implemented.')
+  }
+  removeCustomModel(providerId: string, modelId: string): void {
+    throw new Error('Method not implemented.')
+  }
+  updateCustomModel(providerId: string, modelId: string, updates: Partial<MODEL_META>): void {
+    throw new Error('Method not implemented.')
+  }
+  getCloseToQuit(): boolean {
+    throw new Error('Method not implemented.')
+  }
+  setCloseToQuit(value: boolean): void {
+    throw new Error('Method not implemented.')
+  }
+  getModelStatus(providerId: string, modelId: string): boolean {
+    throw new Error('Method not implemented.')
+  }
+  setModelStatus(providerId: string, modelId: string, enabled: boolean): void {
+    throw new Error('Method not implemented.')
   }
 
   /**

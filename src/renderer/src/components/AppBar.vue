@@ -51,7 +51,7 @@ const devicePresenter = usePresenter('devicePresenter')
 const isMacOS = ref(false)
 const isMaximized = ref(false)
 
-const { ipcRenderer =null } = window?.electron
+const { ipcRenderer = null } = window?.electron
 onMounted(() => {
   devicePresenter.getDeviceInfo().then((deviceInfo) => {
     isMacOS.value = deviceInfo.platform == 'darwin'
