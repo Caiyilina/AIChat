@@ -24,10 +24,7 @@
         <template v-else-if="currentStep === 1">
           <a-form layout="vertical" :rules="rules" ref="formRef">
             <a-form-item label="选择服务商">
-              <a-select
-                v-model:value="modelRef.selectedProvider"
-                placeholder="please select your zone"
-              >
+              <a-select v-model:value="modelRef.selectedProvider" placeholder="请选择一个服务商">
                 <a-select-option value="shanghai">Zone one</a-select-option>
                 <a-select-option value="beijing">Zone two</a-select-option>
               </a-select>
@@ -89,12 +86,18 @@ import logo from '@/assets/logo.png'
 import { computed, reactive, ref, toRaw } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Rule } from 'ant-design-vue/es/form'
+import { useRouter } from 'vue-router'
+import { usePresenter } from '@/composables/usePresenter'
+
 type IStep = {
   title: string
   description: string
   icon: string
   image?: string
 }
+// TODO  const settingsStore = useSettingsStore()
+const configPresenter = usePresenter('configPresenter')
+const router = useRouter()
 const steps: IStep[] = [
   {
     title: '欢迎',
@@ -107,7 +110,6 @@ const steps: IStep[] = [
   { title: '完成', description: '一切就绪，可以开始使用了！', icon: 'lucide:check-circle' }
 ]
 const currentStep = ref(0)
-
 const formRef = ref()
 const modelRef = reactive({
   selectedProvider: 'gpt-3.5-turbo',
@@ -134,7 +136,7 @@ const rules: Record<string, Rule[]> = {
     }
   ]
 }
-]
+
 // 表单提交
 const onSubmit = async () => {
   formRef.value

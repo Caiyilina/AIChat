@@ -120,4 +120,5 @@ export type DiskInfo = {
 export interface IPresenter {
   windowPresenter: IWindowPresenter
   devicePresenter: IDevicePresenter
+  configPresenter: IConfigPresenter
 }
