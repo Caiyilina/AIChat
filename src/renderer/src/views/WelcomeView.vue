@@ -22,18 +22,30 @@
           </div>
         </template>
         <template v-else-if="currentStep === 1">
-          <a-form layout="vertical" :rules="rules" ref="formRef">
-            <a-form-item label="选择服务商">
-              <a-select v-model:value="modelRef.selectedProvider" placeholder="请选择一个服务商">
-                <a-select-option value="shanghai">Zone one</a-select-option>
-                <a-select-option value="beijing">Zone two</a-select-option>
+          <a-form layout="vertical" :model="providerForm" :rules="rules" ref="formRef">
+            <a-form-item label="选择服务商" name="selectedProvider">
+              <a-select
+                v-model:value="providerForm.selectedProvider"
+                placeholder="请选择一个服务商"
+              >
+                <template v-for="provider in settingsStore.providers" :key="provider.id">
+                  <a-select-option :value="provider.id">
+                    <div class="flex flex-row items-center">
+                      <ModelIcon
+                        :model-id="provider.id"
+                        :custom-class="'w-4 h-4 text-muted-foreground ri'"
+                      />
+                      <span class="ml-2">{{ provider.id }}</span>
+                    </div>
+                  </a-select-option>
+                </template>
               </a-select>
             </a-form-item>
-            <a-form-item label="API地址">
-              <a-input v-model:value="modelRef.apiKey" />
+            <a-form-item label="API地址" name="apiKey">
+              <a-input v-model:value="providerForm.apiKey" />
             </a-form-item>
-            <a-form-item label="API密钥">
-              <a-input v-model:value="modelRef.baseUrl" />
+            <a-form-item label="API密钥" name="baseUrl">
+              <a-input v-model:value="providerForm.baseUrl" />
             </a-form-item>
             <a-form-item>
               <a-button type="primary" @click="validateLink">验证链接 </a-button>
@@ -47,7 +59,7 @@
       <template #actions>
         <div class="flex justify-between pr-10 pl-10">
           <a-button
-            @click="currentStep -= 1"
+            @click="previousStep"
             type="default"
             size="small"
             :class="{ 'opacity-0': isFirstStep }"
@@ -59,7 +71,7 @@
           <a-button
             class="flex items-center"
             v-if="!isLastStep"
-            @click="currentStep += 1"
+            @click="nextStep"
             type="primary"
             size="small"
           >
@@ -89,6 +101,7 @@ import type { Rule } from 'ant-design-vue/es/form'
 import { useRouter } from 'vue-router'
 import { usePresenter } from '@/composables/usePresenter'
 import { useSettingsStore } from '@/store/settings'
+import ModelIcon from '@/components/icons/ModelIcon.vue'
 type IStep = {
   title: string
   description: string
@@ -96,8 +109,6 @@ type IStep = {
   image?: string
 }
 const settingsStore = useSettingsStore()
-
-console.log('服务商列表--', settingsStore.providers)
 
 const configPresenter = usePresenter('configPresenter')
 const router = useRouter()
@@ -114,7 +125,7 @@ const steps: IStep[] = [
 ]
 const currentStep = ref(0)
 const formRef = ref()
-const modelRef = reactive({
+const providerForm = reactive({
   selectedProvider: 'openai',
   apiKey: '',
   baseUrl: ''
@@ -123,23 +134,93 @@ const rules: Record<string, Rule[]> = {
   selectedProvider: [
     {
       required: true,
-      message: '请选择一个模型服务商'
+      message: '请选择一个模型服务商',
+      trigger: 'blur'
     }
   ],
   apiKey: [
     {
       required: true,
-      message: '请输入 API 密钥'
+      message: '请输入 API 密钥',
+      trigger: 'blur'
     }
   ],
   baseUrl: [
     {
       required: true,
-      message: '请输入 API 地址'
+      message: '请输入 API 地址',
+      trigger: 'blur'
     }
   ]
 }
+const providerModels = computed(() => {
+  return (
+    settingsStore.allProviderModels.find((p) => p.providerId === providerForm.selectedProvider)
+      ?.models ?? []
+  )
+})
+const providerModelLoading = ref(false)
+const showErrorDialog = ref(false)
+const showSuccessDialog = ref(false)
+const dialogMessage = ref('')
 
+const nextStep = async () => {
+  if (currentStep.value < steps.length - 1) {
+    if (currentStep.value == 1) {
+      // 1、验证表单
+      formRef.value
+        .validate()
+        .then(async () => {
+          console.log('验证成功')
+          providerModelLoading.value = true
+          // 保存模型配置信息
+          const tempProvider = settingsStore.providers.find(
+            (p) => p.id == providerForm.selectedProvider
+          )
+          console.log('模型配置信息', tempProvider)
+
+          await settingsStore.updateProvider(providerForm.selectedProvider, {
+            apiKey: providerForm.apiKey,
+            baseUrl: providerForm.baseUrl,
+            id: tempProvider!.id,
+            name: tempProvider!.name,
+            apiType: tempProvider!.apiType,
+            enable: true
+          })
+          currentStep.value++
+          setTimeout(() => {
+            providerModelLoading.value = false
+          }, 2000)
+        })
+        .catch((error) => {
+          console.log('error--', error)
+        })
+    } else {
+      currentStep.value++
+    }
+  } else {
+    // 完成
+    configPresenter.setSetting('init_complete', true) //初始化完成
+    if (!providerModels.value || providerModels.value.length == 0) {
+      // 没有模型信息，去设置
+      router.push({ name: 'settings' })
+    } else {
+      // 去聊天页面
+      router.push({
+        name: 'chat',
+        query: {
+          modelId: providerModels.value[0].id,
+          providerId: providerForm.selectedProvider
+        }
+      })
+    }
+  }
+}
+const previousStep = () => {
+  if (currentStep.value > 0) {
+    currentStep.value--
+  }
+}
 // 表单提交
 const onSubmit = async () => {
   formRef.value
@@ -154,7 +235,7 @@ const onSubmit = async () => {
 
 // 验证链接
 const validateLink = async () => {
-  console.log('验证链接--', modelRef.apiKey, modelRef.baseUrl)
+  console.log('验证链接--', providerForm.apiKey, providerForm.baseUrl)
 }
 
 const isFirstStep = computed(() => currentStep.value === 0)

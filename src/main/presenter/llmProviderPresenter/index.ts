@@ -1,5 +1,6 @@
 import { ILlmProviderPresenter, LLM_PROVIDER, MODEL_META, OllamaModel } from '@shared/presenter'
 import { ShowResponse } from 'ollama'
+import { getModelConfig } from './modelConfigs'
 
 // 流的状态
 interface StreamState {
@@ -33,8 +34,22 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
   getProviderById(id: string): LLM_PROVIDER {
     throw new Error('Method not implemented.')
   }
-  getModelList(providerId: string): Promise<MODEL_META[]> {
-    throw new Error('Method not implemented.')
+  private getProviderInstance(providerId: string) {
+    return null
+  }
+  async getModelList(providerId: string): Promise<MODEL_META[]> {
+    return []
+    const provider = this.getProviderInstance(providerId)
+    let models = await provider.fetchModels()
+    models = models.map((model) => {
+      const config = getModelConfig(model.id)
+      if (config) {
+        model.maxTokens = config.maxTokens
+        model.contextLength = config.contextLength
+      }
+      return model
+    })
+    return models
   }
   updateModelStatus(providerId: string, modelId: string, enabled: boolean): Promise<void> {
     throw new Error('Method not implemented.')
@@ -119,7 +134,7 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     throw new Error('Method not implemented.')
   }
   listOllamaRunningModels(): Promise<OllamaModel[]> {
-    throw new Error('Method not implemented.')
+    return Promise.resolve([])
   }
   pullOllamaModels(modelName: string): Promise<boolean> {
     throw new Error('Method not implemented.')

@@ -42,8 +42,8 @@ export const useSettingsStore = defineStore('settings', () => {
 
   // 初始化设置
   const initSettings = async () => {
-    providers.value = (await configPresenter.getProviders()) || []
-    defaultProvider.value = (await configPresenter.getDefaultProviders()) || []
+    providers.value = await configPresenter.getProviders()
+    defaultProvider.value = await configPresenter.getDefaultProviders()
     theme.value = (await configPresenter.getSetting('theme')) || 'system'
     language.value = (await configPresenter.getSetting('language')) || 'system'
 
@@ -381,6 +381,29 @@ export const useSettingsStore = defineStore('settings', () => {
       await initOrUpdateSearchAssistantModel()
     }
   }
+  // 搜索模型
+  const searchModels = (query: string) => {
+    const filteredModels = enabledModels.value
+      .map((group) => {
+        const filteredGroupModels = group.models.filter((model) => model.id.includes(query))
+        return {
+          providerId: group.providerId,
+          models: filteredGroupModels
+        }
+      })
+      .filter((group) => group.models.length > 0) // 只保留有模型的组
+
+    enabledModels.value = filteredModels
+  }
+  // 更新 provider
+  const updateProvider = async (id: string, provider: LLM_PROVIDER) => {
+    await configPresenter.setProviderById(id, provider)
+    providers.value = await configPresenter.getProviders()
+    // 如果 provider 的启用状态发生变化，刷新模型列表
+    if (provider.enable !== providers.value.find((p) => p.id === id)?.enable) {
+      await refreshAllModels()
+    }
+  }
   // 初始化或更新搜索助手模型
   const initOrUpdateSearchAssistantModel = async () => {
     let savedModel = await configPresenter.getSetting<{
@@ -465,8 +488,8 @@ export const useSettingsStore = defineStore('settings', () => {
   const refreshOllamaModels = async (): Promise<void> => {
     try {
       // 获取本地和运行中的模型列表
-      ollamaRunningModels.value = await llmP.listOllamaRunningModels()
-      ollamaLocalModels.value = await llmP.listOllamaModels()
+      ollamaRunningModels.value = (await llmP.listOllamaRunningModels()) || []
+      ollamaLocalModels.value = (await llmP.listOllamaModels()) || []
 
       // 更新到全局模型列表中
       await syncOllamaModelsToGlobal()
@@ -592,7 +615,9 @@ export const useSettingsStore = defineStore('settings', () => {
     enabledModels,
     allProviderModels,
     customModels,
+    updateProvider,
     initSettings,
+    searchModels,
     refreshAllModels,
     refreshProviderModels,
     initOrUpdateSearchAssistantModel,

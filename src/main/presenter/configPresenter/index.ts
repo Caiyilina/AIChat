@@ -101,9 +101,10 @@ export class ConfigPresenter implements IConfigPresenter {
       console.error(`[Config] Failed to set setting ${key}:`, error)
     }
   }
+
   getProviders(): LLM_PROVIDER[] {
     const providers = this.getSetting<LLM_PROVIDER[]>(PROVIDERS_STORE_KEY)
-    console.log('获取服务商列表', providers)
+    console.log('getProviders', providers)
     if (Array.isArray(providers) && providers?.length > 0) {
       return providers
     } else {
