@@ -9,6 +9,9 @@ import { app } from 'electron'
 import ElectronStore from 'electron-store'
 import path from 'path'
 import fs from 'fs'
+import { DEFAULT_PROVIDERS } from './providers'
+import { eventBus } from '@/eventbus'
+import { CONFIG_EVENTS } from '@/event'
 // 定义应用设置的接口
 interface IAppSettings {
   // 在这里定义你的配置项，例如：
@@ -22,6 +25,15 @@ interface IModelStore {
   models: MODEL_META[]
   custom_models: MODEL_META[]
 }
+// 默认服务商列表
+const defaultProviders = DEFAULT_PROVIDERS.map((provider) => ({
+  id: provider.id,
+  name: provider.name,
+  apiType: provider.apiType,
+  apiKey: provider.apiKey,
+  baseUrl: provider.baseUrl,
+  enable: provider.enable
+}))
 // 定义 storeKey 常量
 const PROVIDERS_STORE_KEY = 'providers'
 
@@ -44,14 +56,14 @@ export class ConfigPresenter implements IConfigPresenter {
     this.initProviderModelsDir()
 
     const existingProviders = this.getSetting<LLM_PROVIDER[]>(PROVIDERS_STORE_KEY) || []
-    // const newProviders = defaultProviders.filter(
-    //   (defaultProvider) =>
-    //     !existingProviders.some((existingProvider) => existingProvider.id === defaultProvider.id)
-    // )
+    const newProviders = defaultProviders.filter(
+      (defaultProvider) =>
+        !existingProviders.some((existingProvider) => existingProvider.id === defaultProvider.id)
+    )
 
-    // if (newProviders.length > 0) {
-    //   this.setProviders([...existingProviders, ...newProviders])
-    // }
+    if (newProviders.length > 0) {
+      this.setProviders([...existingProviders, ...newProviders])
+    }
 
     // // 迁移旧的模型数据
     // this.migrateModelData()
@@ -71,11 +83,32 @@ export class ConfigPresenter implements IConfigPresenter {
   setCustomProxyUrl(url: string): void {
     throw new Error('Method not implemented.')
   }
+  getSetting<T>(key: string): T | undefined {
+    try {
+      return this.store.get(key) as T
+    } catch (error) {
+      console.error(`[Config] Failed to get setting ${key}:`, error)
+      return undefined
+    }
+  }
   setSetting<T>(key: string, value: T): void {
-    throw new Error('Method not implemented.')
+    try {
+      this.store.set(key, value)
+      // 触发设置变更事件
+      eventBus.emit(CONFIG_EVENTS.SETTING_CHANGED, key, value)
+    } catch (error) {
+      console.error(`[Config] Failed to set setting ${key}:`, error)
+    }
   }
   getProviders(): LLM_PROVIDER[] {
-    throw new Error('Method not implemented.')
+    const providers = this.getSetting<LLM_PROVIDER[]>(PROVIDERS_STORE_KEY)
+    console.log('获取服务商列表', providers)
+    if (Array.isArray(providers) && providers?.length > 0) {
+      return providers
+    } else {
+      this.setSetting(PROVIDERS_STORE_KEY, defaultProviders)
+      return defaultProviders
+    }
   }
   setProviders(providers: LLM_PROVIDER[]): void {
     throw new Error('Method not implemented.')
@@ -165,13 +198,5 @@ export class ConfigPresenter implements IConfigPresenter {
 
     // return this.getSystemLanguage()
     return 'zh-CN'
-  }
-  getSetting<T>(key: string): T | undefined {
-    try {
-      return this.store.get(key) as T
-    } catch (error) {
-      console.error(`[Config] Failed to get setting ${key}:`, error)
-      return undefined
-    }
   }
 }

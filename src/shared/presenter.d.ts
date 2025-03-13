@@ -79,6 +79,17 @@ export type LLM_PROVIDER = {
   enable: boolean
   custom?: boolean
 }
+
+export type LLM_PROVIDER_BASE = {
+  websites?: {
+    official: string
+    apiKey: string
+    docs: string
+    models: string
+    defaultBaseUrl: string
+  }
+} & LLM_PROVIDER
+
 export type MODEL_META = {
   id: string
   name: string

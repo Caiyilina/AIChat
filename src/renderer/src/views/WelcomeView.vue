@@ -88,14 +88,17 @@ import { Icon } from '@iconify/vue'
 import type { Rule } from 'ant-design-vue/es/form'
 import { useRouter } from 'vue-router'
 import { usePresenter } from '@/composables/usePresenter'
-
+import { useSettingsStore } from '@/store/settings'
 type IStep = {
   title: string
   description: string
   icon: string
   image?: string
 }
-// TODO  const settingsStore = useSettingsStore()
+const settingsStore = useSettingsStore()
+
+console.log('服务商列表--', settingsStore.providers)
+
 const configPresenter = usePresenter('configPresenter')
 const router = useRouter()
 const steps: IStep[] = [
@@ -112,7 +115,7 @@ const steps: IStep[] = [
 const currentStep = ref(0)
 const formRef = ref()
 const modelRef = reactive({
-  selectedProvider: 'gpt-3.5-turbo',
+  selectedProvider: 'openai',
   apiKey: '',
   baseUrl: ''
 })
