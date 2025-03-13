@@ -28,6 +28,7 @@
     "@iconify-json/vscode-icons": "^1.2.16",
     "@iconify/vue": "^4.3.0",
     "ant-design-vue": "^4.2.6",
+    "compare-versions": "^6.1.1",
     "electron-context-menu": "^4.0.5",
     "electron-store": "^10.0.1",
     "electron-updater": "^6.3.9",

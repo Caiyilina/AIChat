@@ -56,6 +56,7 @@ export interface ModelConfig {
   maxTokens: number
   contextLength: number
   temperature: number
+  vision: boolean
 }
 export type RENDERER_MODEL_META = {
   id: string
