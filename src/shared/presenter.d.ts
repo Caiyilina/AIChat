@@ -45,6 +45,12 @@ export interface IConfigPresenter {
   setModelStatus(providerId: string, modelId: string, enabled: boolean): void
   // 语言设置
   getLanguage(): string
+  getDefaultProviders(): LLM_PROVIDER[]
+  // 代理设置
+  getProxyMode(): string
+  setProxyMode(mode: string): void
+  getCustomProxyUrl(): string
+  setCustomProxyUrl(url: string): void
 }
 export interface ModelConfig {
   maxTokens: number
@@ -83,7 +89,21 @@ export type MODEL_META = {
   maxTokens: number
   description?: string
 }
-
+// 根据 Ollama SDK 定义模型接口
+export interface OllamaModel {
+  name: string
+  model: string
+  modified_at: Date | string // 修改为可以是 Date 或 string
+  size: number
+  digest: string
+  details: {
+    format: string
+    family: string
+    families: string[]
+    parameter_size: string
+    quantization_level: string
+  }
+}
 /**
  * 设备管理类
  */
@@ -114,6 +134,67 @@ export type DiskInfo = {
   free: number
   used: number
 }
+export interface ILlmProviderPresenter {
+  setProviders(provider: LLM_PROVIDER[]): void
+  getProviders(): LLM_PROVIDER[]
+  getProviderById(id: string): LLM_PROVIDER
+  getModelList(providerId: string): Promise<MODEL_META[]>
+  updateModelStatus(providerId: string, modelId: string, enabled: boolean): Promise<void>
+  addCustomModel(
+    providerId: string,
+    model: Omit<MODEL_META, 'providerId' | 'isCustom' | 'group'>
+  ): Promise<MODEL_META>
+  removeCustomModel(providerId: string, modelId: string): Promise<boolean>
+  updateCustomModel(
+    providerId: string,
+    modelId: string,
+    updates: Partial<MODEL_META>
+  ): Promise<boolean>
+  getCustomModels(providerId: string): Promise<MODEL_META[]>
+  startStreamCompletion(
+    providerId: string,
+    messages: ChatMessage[],
+    modelId: string,
+    eventId: string,
+    temperature?: number,
+    maxTokens?: number
+  ): Promise<void>
+  generateCompletion(
+    providerId: string,
+    messages: { role: 'system' | 'user' | 'assistant'; content: string }[],
+    modelId: string,
+    temperature?: number,
+    maxTokens?: number
+  ): Promise<string>
+  startStreamSummary(
+    providerId: string,
+    text: string,
+    modelId: string,
+    eventId: string,
+    temperature?: number,
+    maxTokens?: number
+  ): Promise<void>
+  startStreamText(
+    providerId: string,
+    prompt: string,
+    modelId: string,
+    eventId: string,
+    temperature?: number,
+    maxTokens?: number
+  ): Promise<void>
+  stopStream(eventId: string): Promise<void>
+  check(providerId: string): Promise<{ isOk: boolean; errorMsg: string | null }>
+  summaryTitles(
+    messages: { role: 'system' | 'user' | 'assistant'; content: string }[],
+    providerId: string,
+    modelId: string
+  ): Promise<string>
+  listOllamaModels(): Promise<OllamaModel[]>
+  showOllamaModelInfo(modelName: string): Promise<ShowResponse>
+  listOllamaRunningModels(): Promise<OllamaModel[]>
+  pullOllamaModels(modelName: string): Promise<boolean>
+  deleteOllamaModel(modelName: string): Promise<boolean>
+}
 /**
  * 全局管理类
  */
@@ -121,4 +202,5 @@ export interface IPresenter {
   windowPresenter: IWindowPresenter
   devicePresenter: IDevicePresenter
   configPresenter: IConfigPresenter
+  llmproviderPresenter: ILlmProviderPresenter
 }

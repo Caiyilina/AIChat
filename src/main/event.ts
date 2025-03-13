@@ -9,3 +9,7 @@ export const CONFIG_EVENTS = {
   MODEL_STATUS_CHANGED: 'config:model-status-changed', // 替代 model-status-changed（ConfigPresenter）
   SETTING_CHANGED: 'config:setting-changed' // 替代 setting-changed（ConfigPresenter）
 }
+// ollama 相关事件
+export const OLLAMA_EVENTS = {
+  PULL_MODEL_PROGRESS: 'ollama:pull-model-progress'
+}

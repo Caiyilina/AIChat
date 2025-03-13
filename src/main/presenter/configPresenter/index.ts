@@ -56,6 +56,21 @@ export class ConfigPresenter implements IConfigPresenter {
     // // 迁移旧的模型数据
     // this.migrateModelData()
   }
+  getDefaultProviders(): LLM_PROVIDER[] {
+    throw new Error('Method not implemented.')
+  }
+  getProxyMode(): string {
+    throw new Error('Method not implemented.')
+  }
+  setProxyMode(mode: string): void {
+    throw new Error('Method not implemented.')
+  }
+  getCustomProxyUrl(): string {
+    throw new Error('Method not implemented.')
+  }
+  setCustomProxyUrl(url: string): void {
+    throw new Error('Method not implemented.')
+  }
   setSetting<T>(key: string, value: T): void {
     throw new Error('Method not implemented.')
   }
