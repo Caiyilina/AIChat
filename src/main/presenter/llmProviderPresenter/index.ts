@@ -1,4 +1,5 @@
-import { ILlmProviderPresenter, LLM_PROVIDER, MODEL_META } from '@shared/presenter'
+import { ILlmProviderPresenter, LLM_PROVIDER, MODEL_META, OllamaModel } from '@shared/presenter'
+import { ShowResponse } from 'ollama'
 
 // 流的状态
 interface StreamState {
@@ -6,7 +7,8 @@ interface StreamState {
   providerId: string
   modelId: string
   abortController: AbortController
-  provider: BaseLLMProvider
+  // TODO BaseLLMProvider
+  provider: any
 }
 
 // 配置项
@@ -58,7 +60,9 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
   }
   startStreamCompletion(
     providerId: string,
-    messages: ChatMessage[],
+    // messages: ChatMessage[],
+    messages: any[],
+
     modelId: string,
     eventId: string,
     temperature?: number,

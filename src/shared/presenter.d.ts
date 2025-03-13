@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BrowserWindow } from 'electron'
-
+import { ShowResponse } from 'ollama'
 /**
  * 窗口管理类
  */
