@@ -9,6 +9,7 @@ import {
 import { BaseLLMProvider, ChatMessage } from '../baseProvider'
 import { ConfigPresenter } from '../../configPresenter'
 import { Ollama, Message, ShowResponse } from 'ollama'
+import logger from '@/utils/log'
 
 export class OllamaProvider extends BaseLLMProvider {
   private ollama: Ollama
@@ -22,7 +23,7 @@ export class OllamaProvider extends BaseLLMProvider {
   // 基础 Provider 功能实现
   protected async fetchProviderModels(): Promise<MODEL_META[]> {
     try {
-      console.log('Ollama service check', this.ollama, this.provider)
+      logger.info('Ollama service check', this.ollama, this.provider)
       // 获取 Ollama 本地已安装的模型列表
       const ollamaModels = await this.listModels()
 
@@ -38,7 +39,7 @@ export class OllamaProvider extends BaseLLMProvider {
         description: `${model.details?.parameter_size || ''} ${model.details?.family || ''} model`
       }))
     } catch (error) {
-      console.error('Failed to fetch Ollama models:', error)
+      logger.error('Failed to fetch Ollama models:', error)
       return []
     }
   }
@@ -77,7 +78,7 @@ export class OllamaProvider extends BaseLLMProvider {
       await this.ollama.list()
       return { isOk: true, errorMsg: null }
     } catch (error) {
-      console.error('Ollama service check failed:', error)
+      logger.error('Ollama service check failed:', error)
       return {
         isOk: false,
         errorMsg: `无法连接到 Ollama 服务: ${(error as Error).message}`
@@ -102,7 +103,7 @@ export class OllamaProvider extends BaseLLMProvider {
 
       return response.response.trim()
     } catch (error) {
-      console.error('Failed to generate title with Ollama:', error)
+      logger.error('Failed to generate title with Ollama:', error)
       return '新对话'
     }
   }
@@ -128,7 +129,7 @@ export class OllamaProvider extends BaseLLMProvider {
         reasoning_content: undefined
       }
     } catch (error) {
-      console.error('Ollama completions failed:', error)
+      logger.error('Ollama completions failed:', error)
       throw error
     }
   }
@@ -156,7 +157,7 @@ export class OllamaProvider extends BaseLLMProvider {
         reasoning_content: undefined
       }
     } catch (error) {
-      console.error('Ollama summaries failed:', error)
+      logger.error('Ollama summaries failed:', error)
       throw error
     }
   }
@@ -182,7 +183,7 @@ export class OllamaProvider extends BaseLLMProvider {
         reasoning_content: undefined
       }
     } catch (error) {
-      console.error('Ollama generate text failed:', error)
+      logger.error('Ollama generate text failed:', error)
       throw error
     }
   }
@@ -212,7 +213,7 @@ export class OllamaProvider extends BaseLLMProvider {
         .filter((line) => line && line.length > 0)
         .slice(0, 5) // 最多返回5个建议
     } catch (error) {
-      console.error('Ollama suggestions failed:', error)
+      logger.error('Ollama suggestions failed:', error)
       return []
     }
   }
@@ -248,7 +249,7 @@ export class OllamaProvider extends BaseLLMProvider {
 
       // 最终流结束时不需要传递 isEnd 参数
     } catch (error) {
-      console.error('Ollama stream completions failed:', error)
+      logger.error('Ollama stream completions failed:', error)
       throw error
     }
   }
@@ -283,7 +284,7 @@ export class OllamaProvider extends BaseLLMProvider {
 
       // 最终流结束时不需要传递 isEnd 参数
     } catch (error) {
-      console.error('Ollama stream summaries failed:', error)
+      logger.error('Ollama stream summaries failed:', error)
       throw error
     }
   }
@@ -316,7 +317,7 @@ export class OllamaProvider extends BaseLLMProvider {
 
       // 最终流结束时不需要传递 isEnd 参数
     } catch (error) {
-      console.error('Ollama stream generate text failed:', error)
+      logger.error('Ollama stream generate text failed:', error)
       throw error
     }
   }
@@ -328,7 +329,7 @@ export class OllamaProvider extends BaseLLMProvider {
       // 返回类型转换，适应我们的 OllamaModel 接口
       return response.models as unknown as OllamaModel[]
     } catch (error) {
-      console.error('Failed to list Ollama models:', (error as Error).message)
+      logger.error('Failed to list Ollama models:', (error as Error).message)
       return []
     }
   }
@@ -338,7 +339,7 @@ export class OllamaProvider extends BaseLLMProvider {
       const response = await this.ollama.ps()
       return response.models as unknown as OllamaModel[]
     } catch (error) {
-      console.error('Failed to list running Ollama models:', (error as Error).message)
+      logger.error('Failed to list running Ollama models:', (error as Error).message)
       return []
     }
   }
@@ -362,7 +363,7 @@ export class OllamaProvider extends BaseLLMProvider {
 
       return true
     } catch (error) {
-      console.error(`Failed to pull Ollama model ${modelName}:`, (error as Error).message)
+      logger.error(`Failed to pull Ollama model ${modelName}:`, (error as Error).message)
       return false
     }
   }
@@ -374,7 +375,7 @@ export class OllamaProvider extends BaseLLMProvider {
       })
       return true
     } catch (error) {
-      console.error(`Failed to delete Ollama model ${modelName}:`, (error as Error).message)
+      logger.error(`Failed to delete Ollama model ${modelName}:`, (error as Error).message)
       return false
     }
   }
@@ -386,7 +387,7 @@ export class OllamaProvider extends BaseLLMProvider {
       })
       return response
     } catch (error) {
-      console.error(`Failed to show Ollama model info for ${modelName}:`, (error as Error).message)
+      logger.error(`Failed to show Ollama model info for ${modelName}:`, (error as Error).message)
       throw error
     }
   }
