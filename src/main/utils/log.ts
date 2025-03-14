@@ -7,26 +7,27 @@ import path from 'path'
 
 class Logger {
   private static instance: Logger
+  logDir: string = ''
   private constructor() {
+    this.initSetting()
+  }
+  private initSetting(): void {
     // 配置日志输出路径
-    let logDir = ''
-    // 开发模式下，日志存储在项目根目录下logs
-    // 生产模式下，日志存储在用户数据目录下logs
     if (process.env.NODE_ENV === 'development') {
-      logDir = path.join(app.getAppPath(), 'logs')
+      this.logDir = path.join(app.getAppPath(), 'logs')
     } else {
-      logDir = path.join(app.getPath('userData'), 'logs')
+      this.logDir = path.join(app.getPath('userData'), 'logs')
     }
-
-    if (!logDir) {
-      mkdirSync(logDir)
+    if (!this.logDir) {
+      mkdirSync(this.logDir)
     }
     const logFileName = format(new Date(), 'yyyy-MM-dd') + '.log'
-    const logFilePath = path.join(logDir, logFileName)
+    const logFilePath = path.join(this.logDir, logFileName)
     log.transports.file.resolvePath = () => logFilePath
-    log.transports.file.maxSize = 1024 * 1024 * 10 // 10MB
+    log.transports.file.maxSize = 1024 * 1024 * 1 // 1MB
     log.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] [{level}]{scope} {text}'
   }
+
   public static getInstance(): Logger {
     if (!Logger.instance) {
       Logger.instance = new Logger()
@@ -37,6 +38,7 @@ class Logger {
     log.info(message)
   }
   public error(message: string): void {
+    // 配置错误
     log.error(message)
   }
   public debug(message: string): void {

@@ -4,13 +4,14 @@ import { WindowPresenter } from './windowPresenter'
 import { eventBus } from '@/eventbus'
 import { CONFIG_EVENTS, WINDOW_EVENTS } from '@/event'
 import { app, ipcMain, IpcMainInvokeEvent } from 'electron'
-import { IPresenter } from '@shared/presenter'
+import { ILlmProviderPresenter, IPresenter } from '@shared/presenter'
 import { DevicePresenter } from './devicePresenter'
+import { LLMProviderPresenter } from './llmProviderPresenter'
 
 export class Presenter implements IPresenter {
   windowPresenter: WindowPresenter
   // sqlitePresenter: SQLitePresenter
-  // llmproviderPresenter: LLMProviderPresenter
+  llmproviderPresenter: LLMProviderPresenter
   configPresenter: ConfigPresenter
   // threadPresenter: ThreadPresenter
   devicePresenter: DevicePresenter
@@ -35,6 +36,7 @@ export class Presenter implements IPresenter {
     // this.llamaCppPresenter = new LlamaCppPresenter()
     this.setupEventBus()
   }
+
   setupEventBus(): void {
     // 窗口事件
     eventBus.on(WINDOW_EVENTS.READY_TO_SHOW, () => {
