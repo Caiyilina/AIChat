@@ -34,17 +34,22 @@ class Logger {
     }
     return Logger.instance
   }
-  public info(message: any): void {
-    log.info(message)
+
+  public info(...args: any[]): void {
+    const combinedMessage = args.map((arg) => arg).join(' ')
+    log.info(combinedMessage)
   }
-  public error(message: any): void {
-    log.error(message)
+  public error(...args: any[]): void {
+    const combinedMessage = args.map((arg) => arg).join(' ')
+    log.error(combinedMessage)
   }
-  public debug(message: any): void {
-    log.debug(message)
+  public debug(...args: any[]): void {
+    const combinedMessage = args.map((arg) => arg).join(' ')
+    log.debug(combinedMessage)
   }
-  public warn(message: any): void {
-    log.warn(message)
+  public warn(...args: any[]): void {
+    const combinedMessage = args.map((arg) => arg).join(' ')
+    log.warn(combinedMessage)
   }
 }
 const logger = Logger.getInstance()

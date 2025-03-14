@@ -15,6 +15,7 @@ export class OllamaProvider extends BaseLLMProvider {
   constructor(provider: LLM_PROVIDER, configPresenter: ConfigPresenter) {
     super(provider, configPresenter)
     this.ollama = new Ollama({ host: this.provider.baseUrl })
+    // 抽象类的方法
     this.init()
   }
 

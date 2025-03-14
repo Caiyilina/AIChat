@@ -7,6 +7,7 @@ import { app, ipcMain, IpcMainInvokeEvent } from 'electron'
 import { ILlmProviderPresenter, IPresenter } from '@shared/presenter'
 import { DevicePresenter } from './devicePresenter'
 import { LLMProviderPresenter } from './llmProviderPresenter'
+import logger from '@/utils/log'
 
 export class Presenter implements IPresenter {
   windowPresenter: WindowPresenter
@@ -148,16 +149,16 @@ ipcMain.handle(
     try {
       const calledPresenter = presenter[name]
       if (!calledPresenter) {
-        console.warn('calling wrong presenter', name)
+        logger.warn(`calling wrong presenter : ${name}`)
         return
       }
       if (!calledPresenter[method]) {
-        console.warn('calling wrong presenter method', name, method)
+        logger.warn(`calling wrong presenter method :${name}, ${method}`)
         return
       }
       return calledPresenter[method](...payloads)
     } catch (error) {
-      console.warn('error on presenter handle', error)
+      logger.warn(`error on presenter handle : ${error}`)
       return null
     }
   }

@@ -9,7 +9,6 @@ import { toRaw } from 'vue'
 function createProxy(presenterName: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new Proxy({} as any, {
-
     get(_, functionName) {
       return (...payloads: []) => {
         const rawPayloads = payloads.map((e) => toRaw(e))

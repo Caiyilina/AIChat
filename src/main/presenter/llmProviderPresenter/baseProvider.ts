@@ -1,5 +1,6 @@
 import { LLM_PROVIDER, MODEL_META, LLMResponse, LLMResponseStream } from '@shared/presenter'
 import { ConfigPresenter } from '../configPresenter'
+import logger from '@/utils/log'
 
 // 定义ChatMessage接口用于统一消息格式
 export interface ChatMessage {
@@ -38,9 +39,9 @@ export abstract class BaseLLMProvider {
         // 检查是否需要自动启用所有模型
         await this.autoEnableModelsIfNeeded()
         this.isInitialized = true
-        console.info('Provider initialized successfully:', this.provider.name)
+        logger.info(`Provider initialized successfully:${this.provider.name}`)
       } catch (error) {
-        console.warn('Provider initialization failed:', this.provider.name, error)
+        logger.warn(`Provider initialization failed:${this.provider.name}, ${error}`)
       }
     }
   }
