@@ -34,17 +34,16 @@ class Logger {
     }
     return Logger.instance
   }
-  public info(message: string): void {
+  public info(message: any): void {
     log.info(message)
   }
-  public error(message: string): void {
-    // 配置错误
+  public error(message: any): void {
     log.error(message)
   }
-  public debug(message: string): void {
+  public debug(message: any): void {
     log.debug(message)
   }
-  public warn(message: string): void {
+  public warn(message: any): void {
     log.warn(message)
   }
 }

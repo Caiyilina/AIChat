@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { presenter } from './presenter'
 import logger from './utils/log'
+import { scheduledDelLog } from './utils/scheduledTask'
 
 // 添加开关选项
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required') //设置自动播放策略，自动播放
@@ -20,6 +21,7 @@ app.whenReady().then(() => {
   logger.info('app启动')
   logger.error('测试错误日志')
   logger.warn('测试警告日志')
+  scheduledDelLog()
   // TODO 系统代理   proxyConfig.resolveProxy() 未添加
 
   app.on('browser-window-created', (_, window) => {
