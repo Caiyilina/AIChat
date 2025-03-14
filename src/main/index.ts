@@ -3,6 +3,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { presenter } from './presenter'
+import logger from './utils/log'
 
 // 添加开关选项
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required') //设置自动播放策略，自动播放
@@ -16,7 +17,7 @@ if (process.platform === 'darwin') {
 }
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.lune.aichat') //设置应用id
-
+  logger.info('app启动')
   // TODO 系统代理   proxyConfig.resolveProxy() 未添加
 
   app.on('browser-window-created', (_, window) => {

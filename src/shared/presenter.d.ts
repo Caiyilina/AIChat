@@ -101,6 +101,14 @@ export type MODEL_META = {
   maxTokens: number
   description?: string
 }
+export type LLMResponse = {
+  content: string
+  reasoning_content?: string
+}
+export type LLMResponseStream = {
+  content?: string
+  reasoning_content?: string
+}
 // 根据 Ollama SDK 定义模型接口
 export interface OllamaModel {
   name: string
@@ -215,4 +223,27 @@ export interface IPresenter {
   devicePresenter: IDevicePresenter
   configPresenter: IConfigPresenter
   llmproviderPresenter: ILlmProviderPresenter
+}
+
+// 根据 Ollama SDK 定义模型接口
+export interface OllamaModel {
+  name: string
+  model: string
+  modified_at: Date | string // 修改为可以是 Date 或 string
+  size: number
+  digest: string
+  details: {
+    format: string
+    family: string
+    families: string[]
+    parameter_size: string
+    quantization_level: string
+  }
+}
+// 定义进度回调的接口
+export interface ProgressResponse {
+  status: string
+  digest?: string
+  total?: number
+  completed?: number
 }

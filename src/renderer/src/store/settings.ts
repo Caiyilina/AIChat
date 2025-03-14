@@ -404,6 +404,22 @@ export const useSettingsStore = defineStore('settings', () => {
       await refreshAllModels()
     }
   }
+
+  // 更新主题
+  const updateTheme = async (newTheme: string) => {
+    await configPresenter.setSetting('theme', newTheme)
+    theme.value = newTheme
+  }
+
+  // 更新语言
+  const updateLanguage = async (newLanguage: string) => {
+    await configPresenter.setSetting('language', newLanguage)
+    language.value = newLanguage
+  }
+  //  检查模型
+  const checkModel = async (providerId: string) => {
+    return await llmP.check(providerId)
+  }
   // 初始化或更新搜索助手模型
   const initOrUpdateSearchAssistantModel = async () => {
     let savedModel = await configPresenter.getSetting<{
@@ -624,6 +640,14 @@ export const useSettingsStore = defineStore('settings', () => {
     ollamaRunningModels,
     ollamaLocalModels,
     ollamaPullingModels,
-    refreshOllamaModels
+    refreshOllamaModels,
+    checkModel,
+    updateTheme,
+    updateLanguage,
+    searchAssistantModelRef,
+    searchAssistantProviderRef,
+    findPriorityModel,
+    syncOllamaModelsToGlobal,
+    setupOllamaEventListeners
   }
 })

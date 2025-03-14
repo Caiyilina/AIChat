@@ -22,7 +22,7 @@ interface ProviderConfig {
  */
 export class LLMProviderPresenter implements ILlmProviderPresenter {
   private providers: Map<string, LLM_PROVIDER> = new Map()
-  // private providerInstances: Map<string, BaseLLMProvider> = new Map()
+  private providerInstances: Map<string, BaseLLMProvider> = new Map()
   private currentProviderId: string | null = null
 
   setProviders(provider: LLM_PROVIDER[]): void {
@@ -71,7 +71,7 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     throw new Error('Method not implemented.')
   }
   getCustomModels(providerId: string): Promise<MODEL_META[]> {
-    throw new Error('Method not implemented.')
+    return Promise.resolve([])
   }
   startStreamCompletion(
     providerId: string,
@@ -118,7 +118,11 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     throw new Error('Method not implemented.')
   }
   check(providerId: string): Promise<{ isOk: boolean; errorMsg: string | null }> {
-    throw new Error('Method not implemented.')
+    // TODO 各个模型的检测方法
+    return Promise.resolve({
+      isOk: false,
+      errorMsg: '方法未完善'
+    })
   }
   summaryTitles(
     messages: { role: 'system' | 'user' | 'assistant'; content: string }[],

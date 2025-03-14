@@ -41,18 +41,39 @@
                 </template>
               </a-select>
             </a-form-item>
-            <a-form-item label="API地址" name="apiKey">
-              <a-input v-model:value="providerForm.apiKey" />
-            </a-form-item>
-            <a-form-item label="API密钥" name="baseUrl">
+            <a-form-item label="API地址" name="baseUrl">
               <a-input v-model:value="providerForm.baseUrl" />
+            </a-form-item>
+            <a-form-item label="API密钥" name="apiKey">
+              <a-input v-model:value="providerForm.apiKey" />
             </a-form-item>
             <a-form-item>
               <a-button type="primary" @click="validateLink">验证链接 </a-button>
             </a-form-item>
           </a-form>
         </template>
-        <template v-else-if="currentStep === 2"> </template>
+        <template v-else-if="currentStep === 2">
+          <div class="space-y-4">
+            <!-- 1、模型同步中 -->
+            <template v-if="providerModelLoading">
+              <div class="text-center">
+                <Icon icon="mdi:loading" class="w-8 h-8 text-primary animate-spin" />
+                <p class="text-muted-foreground">正在同步模型，请稍候...</p>
+              </div>
+            </template>
+            <!-- 2、模型同步完成，显示模型列表 -->
+            <template v-else-if="!providerModelLoading && providerModels.length > 0">
+              <div>模型列表：{{ providerModels.length }}</div>
+            </template>
+            <!-- 3、模型同步失败 -->
+            <template v-else>
+              <div class="text-center">
+                <Icon icon="mdi:alert-circle" class="w-8 h-8 text-error" />
+                <p class="text-muted-foreground">同步模型失败，请稍后重试...</p>
+              </div>
+            </template>
+          </div>
+        </template>
         <template v-else> </template>
       </div>
       <!-- 操作 -->
@@ -98,6 +119,7 @@ import logo from '@/assets/logo.png'
 import { computed, reactive, ref, toRaw } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Rule } from 'ant-design-vue/es/form'
+import { Modal } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { usePresenter } from '@/composables/usePresenter'
 import { useSettingsStore } from '@/store/settings'
@@ -149,6 +171,11 @@ const rules: Record<string, Rule[]> = {
     {
       required: true,
       message: '请输入 API 地址',
+      trigger: 'blur'
+    },
+    {
+      type: 'url',
+      message: '请输入正确的 API 地址',
       trigger: 'blur'
     }
   ]
@@ -236,6 +263,43 @@ const onSubmit = async () => {
 // 验证链接
 const validateLink = async () => {
   console.log('验证链接--', providerForm.apiKey, providerForm.baseUrl)
+
+  if (
+    (!providerForm.apiKey || !providerForm.baseUrl) &&
+    providerForm.selectedProvider != 'ollama'
+  ) {
+    Modal.error({
+      title: '错误',
+      content: '请输入 API 密钥和 API 地址'
+    })
+    return
+  }
+  const selProviderItem = settingsStore.providers.find((p) => p.id == providerForm.selectedProvider)
+  console.log('验证链接--的服务商对象', selProviderItem)
+  if (!selProviderItem) return
+
+  // 1、更新服务商信息
+  await settingsStore.updateProvider(providerForm.selectedProvider, {
+    apiKey: providerForm.apiKey,
+    baseUrl: providerForm.baseUrl,
+    id: selProviderItem!.id,
+    name: selProviderItem!.name,
+    apiType: selProviderItem!.apiType,
+    enable: true
+  })
+  const res = await settingsStore.checkModel(providerForm.selectedProvider)
+  console.log('验证链接--的结果', res)
+  if (res.isOk) {
+    Modal.success({
+      title: '成功',
+      content: '链接验证成功'
+    })
+  } else {
+    Modal.error({
+      title: '错误',
+      content: res.errorMsg
+    })
+  }
 }
 
 const isFirstStep = computed(() => currentStep.value === 0)
