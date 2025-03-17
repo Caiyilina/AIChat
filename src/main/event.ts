@@ -13,3 +13,9 @@ export const CONFIG_EVENTS = {
 export const OLLAMA_EVENTS = {
   PULL_MODEL_PROGRESS: 'ollama:pull-model-progress'
 }
+// 通信相关事件
+export const STREAM_EVENTS = {
+  RESPONSE: 'stream:response', // 替代 stream-response
+  END: 'stream:end', // 替代 stream-end
+  ERROR: 'stream:error' // 替代 stream-error
+}
