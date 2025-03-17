@@ -5,6 +5,9 @@ import { ConfigPresenter } from '@/presenter/configPresenter'
 import logger from '@/utils/log'
 import { ChatCompletionMessage, ChatCompletionMessageParam } from 'openai/resources'
 
+/**
+ * 兼容openAI API的LLM服务供应商交互类
+ */
 export class OpenAICompatibleProvider extends BaseLLMProvider {
   protected openai: OpenAI
   private isNoModelsApi: boolean = false
