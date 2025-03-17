@@ -392,6 +392,12 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
 
   async check(providerId: string): Promise<{ isOk: boolean; errorMsg: string | null }> {
     const provider = this.getProviderInstance(providerId)
+    if (!provider) {
+      return {
+        isOk: false,
+        errorMsg: '模型不存在'
+      }
+    }
     return provider.check()
   }
 
