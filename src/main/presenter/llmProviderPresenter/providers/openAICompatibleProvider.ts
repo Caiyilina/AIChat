@@ -43,6 +43,7 @@ export class OpenAICompatibleProvider extends BaseLLMProvider {
    */
   protected async fetchOpenAIModels(options?: { timeout: number }): Promise<MODEL_META[]> {
     const response = await this.openai.models.list(options)
+    logger.info(`openai-获取模型列表--${response}`)
     return response.data.map((model) => ({
       id: model.id,
       name: model.id,
@@ -299,6 +300,7 @@ export class OpenAICompatibleProvider extends BaseLLMProvider {
         const models = await this.fetchOpenAIModels({
           timeout: 3000
         })
+        logger.info(`检查模型是否可用--`, models)
         this.models = models
         // 避免在这里触发事件，而是通过ConfigPresenter来管理模型更新
       }

@@ -18,36 +18,41 @@ const taskFn = () => {
   )
   task.start()
 }
+// 封装检查并删除过期日志文件的逻辑
+const checkAndDeleteLogs = (dayDiff: number) => {
+  try {
+    const files = fs.readdirSync(logDir)
+    logger.info(`读取日志文件--${[...files]}`)
+    files.forEach((file) => {
+      const filePath = path.join(logDir, file)
+      logger.info('日志文件路径' + filePath)
 
+      const fileStats = fs.statSync(filePath)
+      const daysSinceCreation = Number(
+        ((Date.now() - fileStats.ctime.getTime()) / (1000 * 60 * 60 * 24)).toFixed(2)
+      )
+      logger.info(`状态问文件c创建时间--${fileStats.ctime.getTime()}`)
+      logger.info('日志文件时间差--day--' + daysSinceCreation)
+      if (daysSinceCreation > dayDiff) {
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            logger.error('删除日志错误--' + err)
+          } else {
+            logger.info('删除日志成功--' + filePath)
+          }
+        })
+      }
+    })
+  } catch (error) {
+    logger.error('执行定时任务 --scheduledDelLog 出错：' + error)
+  }
+}
 // 定时删除日志文件任务 每天上午10点
 const scheduledDelLog = (dayDiff: number = 1) => {
+  // 应用启动时执行一次检查
+  checkAndDeleteLogs(dayDiff)
   const task = cron.schedule('0 10 * * *', async () => {
-    try {
-      const files = fs.readdirSync(logDir)
-      logger.info(`读取日志文件--${[...files]}`)
-      files.forEach((file) => {
-        const filePath = path.join(logDir, file)
-        logger.info('日志文件路径' + filePath)
-
-        const fileStats = fs.statSync(filePath)
-        const daysSinceCreation = Number(
-          ((Date.now() - fileStats.ctime.getTime()) / (1000 * 60 * 60 * 24)).toFixed(2)
-        )
-        logger.info(`状态问文件c创建时间--${fileStats.ctime.getTime()}`)
-        logger.info('日志文件时间差--day--' + daysSinceCreation)
-        if (daysSinceCreation > dayDiff) {
-          fs.unlink(filePath, (err) => {
-            if (err) {
-              logger.error('删除日志错误--' + err)
-            } else {
-              logger.info('删除日志成功--' + filePath)
-            }
-          })
-        }
-      })
-    } catch (error) {
-      logger.error('执行定时任务 --scheduledDelLog 出错：' + error)
-    }
+    checkAndDeleteLogs(dayDiff)
   })
   task.start()
 }
