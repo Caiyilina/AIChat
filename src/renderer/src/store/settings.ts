@@ -267,6 +267,8 @@ export const useSettingsStore = defineStore('settings', () => {
       try {
         // 获取在线模型
         let models = await configPresenter.getProviderModels(provider.id)
+        console.log('获取在线模型---', models)
+
         if (!models || models.length === 0) {
           const modelMetas = await llmP.getModelList(provider.id)
           if (modelMetas) {
@@ -399,6 +401,8 @@ export const useSettingsStore = defineStore('settings', () => {
   const updateProvider = async (id: string, provider: LLM_PROVIDER) => {
     await configPresenter.setProviderById(id, provider)
     providers.value = await configPresenter.getProviders()
+    console.log('providers===', providers)
+
     // 如果 provider 的启用状态发生变化，刷新模型列表
     if (provider.enable !== providers.value.find((p) => p.id === id)?.enable) {
       await refreshAllModels()

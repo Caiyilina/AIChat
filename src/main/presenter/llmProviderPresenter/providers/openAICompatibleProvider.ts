@@ -43,7 +43,7 @@ export class OpenAICompatibleProvider extends BaseLLMProvider {
    */
   protected async fetchOpenAIModels(options?: { timeout: number }): Promise<MODEL_META[]> {
     const response = await this.openai.models.list(options)
-    logger.info(`openai-获取模型列表--${response}`)
+    logger.info(`openai-获取模型列表--${[...response?.data]}`)
     return response.data.map((model) => ({
       id: model.id,
       name: model.id,

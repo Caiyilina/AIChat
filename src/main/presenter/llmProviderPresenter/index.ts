@@ -140,6 +140,7 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
           instance = new OpenAICompatibleProvider(provider, this.configPresenter)
           break
       }
+      logger.info(`获取服务商实例对象--`, instance)
       this.providerInstances.set(providerId, instance)
     }
     return instance

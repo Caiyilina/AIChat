@@ -103,7 +103,7 @@
             v-else
             type="primary"
             size="small"
-            @click="$router.push('/')"
+            @click="handleStart"
           >
             开始使用
             <Icon icon="lucide:check-circle" class="w-4 h-4 ml-2" />
@@ -116,7 +116,7 @@
 
 <script setup lang="ts">
 import logo from '@/assets/logo.png'
-import { computed, reactive, ref, toRaw } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, toRaw, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Rule } from 'ant-design-vue/es/form'
 import { Modal } from 'ant-design-vue'
@@ -124,6 +124,7 @@ import { useRouter } from 'vue-router'
 import { usePresenter } from '@/composables/usePresenter'
 import { useSettingsStore } from '@/store/settings'
 import ModelIcon from '@/components/icons/ModelIcon.vue'
+
 type IStep = {
   title: string
   description: string
@@ -191,6 +192,40 @@ const showErrorDialog = ref(false)
 const showSuccessDialog = ref(false)
 const dialogMessage = ref('')
 
+watch(
+  () => providerForm.selectedProvider,
+  (newVal) => {
+    const provider = settingsStore.providers.find((p) => p.id == newVal)
+    console.log('监听服务商---', newVal, provider)
+    if (provider) {
+      providerForm.apiKey = provider.apiKey
+      providerForm.baseUrl = provider.baseUrl
+    }
+  },
+  {
+    immediate: true
+  }
+)
+
+const cancelWatch = watch(
+  () => settingsStore.providers,
+  (newVal) => {
+    console.log('监听store中的provider列表', newVal)
+    if (newVal?.length > 0) {
+      // 表单初始化
+      providerForm.selectedProvider = newVal[0].id
+      providerForm.apiKey = newVal[0].apiKey
+      providerForm.baseUrl = newVal[0].baseUrl
+      // 初始化完成，取消监听
+      nextTick(() => {
+        cancelWatch()
+      })
+    }
+  },
+  {
+    immediate: true
+  }
+)
 const nextStep = async () => {
   if (currentStep.value < steps.length - 1) {
     if (currentStep.value == 1) {
@@ -225,27 +260,30 @@ const nextStep = async () => {
     } else {
       currentStep.value++
     }
-  } else {
-    // 完成
-    configPresenter.setSetting('init_complete', true) //初始化完成
-    if (!providerModels.value || providerModels.value.length == 0) {
-      // 没有模型信息，去设置
-      router.push({ name: 'settings' })
-    } else {
-      // 去聊天页面
-      router.push({
-        name: 'chat',
-        query: {
-          modelId: providerModels.value[0].id,
-          providerId: providerForm.selectedProvider
-        }
-      })
-    }
   }
 }
 const previousStep = () => {
   if (currentStep.value > 0) {
     currentStep.value--
+  }
+}
+const handleStart = () => {
+  // 完成
+  // configPresenter.setSetting('init_complete', true) //初始化完成
+  if (!providerModels.value || providerModels.value.length == 0) {
+    // 没有模型信息，去设置
+    console.log('没有模型信息')
+
+    // router.push({ name: 'settings' })
+  } else {
+    // 去聊天页面
+    router.push({
+      name: 'chat',
+      query: {
+        modelId: providerModels.value[0].id,
+        providerId: providerForm.selectedProvider
+      }
+    })
   }
 }
 // 表单提交
@@ -304,6 +342,9 @@ const validateLink = async () => {
 
 const isFirstStep = computed(() => currentStep.value === 0)
 const isLastStep = computed(() => currentStep.value === steps.length - 1)
+onMounted(() => {
+  settingsStore.initSettings()
+})
 </script>
 <script lang="ts">
 export default {

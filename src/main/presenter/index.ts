@@ -2,7 +2,7 @@ import path from 'path'
 import { ConfigPresenter } from './configPresenter'
 import { WindowPresenter } from './windowPresenter'
 import { eventBus } from '@/eventbus'
-import { CONFIG_EVENTS, WINDOW_EVENTS } from '@/event'
+import { CONFIG_EVENTS, STREAM_EVENTS, WINDOW_EVENTS } from '@/event'
 import { app, ipcMain, IpcMainInvokeEvent } from 'electron'
 import { ILlmProviderPresenter, IPresenter } from '@shared/presenter'
 import { DevicePresenter } from './devicePresenter'
@@ -24,7 +24,7 @@ export class Presenter implements IPresenter {
   constructor() {
     this.configPresenter = new ConfigPresenter()
     this.windowPresenter = new WindowPresenter(this.configPresenter)
-    // this.llmproviderPresenter = new LLMProviderPresenter(this.configPresenter)
+    this.llmproviderPresenter = new LLMProviderPresenter(this.configPresenter)
     this.devicePresenter = new DevicePresenter()
     // 初始化 SQLite 数据库
     const dbDir = path.join(app.getPath('userData'), 'app_db')
@@ -46,24 +46,24 @@ export class Presenter implements IPresenter {
 
     // 配置相关事件
     eventBus.on(CONFIG_EVENTS.PROVIDER_CHANGED, () => {
-      // const providers = this.configPresenter.getProviders()
-      // this.llmproviderPresenter.setProviders(providers)
+      const providers = this.configPresenter.getProviders()
+      this.llmproviderPresenter.setProviders(providers)
       this.windowPresenter.mainWindow?.webContents.send(CONFIG_EVENTS.PROVIDER_CHANGED)
     })
 
     // 流式响应事件
-    // eventBus.on(STREAM_EVENTS.RESPONSE, (msg) => {
-    //   this.windowPresenter.mainWindow?.webContents.send(STREAM_EVENTS.RESPONSE, msg)
-    // })
+    eventBus.on(STREAM_EVENTS.RESPONSE, (msg) => {
+      this.windowPresenter.mainWindow?.webContents.send(STREAM_EVENTS.RESPONSE, msg)
+    })
 
-    // eventBus.on(STREAM_EVENTS.END, (msg) => {
-    //   console.log('stream-end', msg.eventId)
-    //   this.windowPresenter.mainWindow?.webContents.send(STREAM_EVENTS.END, msg)
-    // })
+    eventBus.on(STREAM_EVENTS.END, (msg) => {
+      console.log('stream-end', msg.eventId)
+      this.windowPresenter.mainWindow?.webContents.send(STREAM_EVENTS.END, msg)
+    })
 
-    // eventBus.on(STREAM_EVENTS.ERROR, (msg) => {
-    //   this.windowPresenter.mainWindow?.webContents.send(STREAM_EVENTS.ERROR, msg)
-    // })
+    eventBus.on(STREAM_EVENTS.ERROR, (msg) => {
+      this.windowPresenter.mainWindow?.webContents.send(STREAM_EVENTS.ERROR, msg)
+    })
 
     // // 会话相关事件
     // eventBus.on(CONVERSATION_EVENTS.ACTIVATED, (msg) => {
@@ -149,7 +149,7 @@ ipcMain.handle(
     try {
       const calledPresenter = presenter[name]
       if (!calledPresenter) {
-        logger.warn(`calling wrong presenter : ${name}`)
+        logger.warn(`calling wrong presenter : ${name},方法：${method}`)
         return
       }
       if (!calledPresenter[method]) {

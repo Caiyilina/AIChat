@@ -14,6 +14,7 @@ import { eventBus } from '@/eventbus'
 import { CONFIG_EVENTS } from '@/event'
 import { compare } from 'compare-versions'
 import { getModelConfig } from '../llmProviderPresenter/modelConfigs'
+import logger from '@/utils/log'
 // 定义应用设置的接口
 interface IAppSettings {
   // 在这里定义你的配置项，例如：
@@ -88,7 +89,7 @@ export class ConfigPresenter implements IConfigPresenter {
     try {
       return this.store.get(key) as T
     } catch (error) {
-      console.error(`[Config] Failed to get setting ${key}:`, error)
+      logger.error(`[Config] Failed to get setting ${key}:`, error)
       return undefined
     }
   }
@@ -98,13 +99,13 @@ export class ConfigPresenter implements IConfigPresenter {
       // 触发设置变更事件
       eventBus.emit(CONFIG_EVENTS.SETTING_CHANGED, key, value)
     } catch (error) {
-      console.error(`[Config] Failed to set setting ${key}:`, error)
+      logger.error(`[Config] Failed to set setting ${key}:`, error)
     }
   }
 
   getProviders(): LLM_PROVIDER[] {
     const providers = this.getSetting<LLM_PROVIDER[]>(PROVIDERS_STORE_KEY)
-    console.log('getProviders', providers)
+    logger.info('getProviders', providers?.values())
     if (Array.isArray(providers) && providers?.length > 0) {
       return providers
     } else {
@@ -129,7 +130,7 @@ export class ConfigPresenter implements IConfigPresenter {
       providers[index] = provider
       this.setProviders(providers)
     } else {
-      console.error(`[Config] Provider ${id} not found`)
+      logger.error(`[Config] Provider ${id} not found`)
     }
   }
   // 构造模型状态的存储键
@@ -162,6 +163,7 @@ export class ConfigPresenter implements IConfigPresenter {
   getProviderModels(providerId: string): MODEL_META[] {
     const store = this.getProviderModelStore(providerId)
     let models = store.get('models') || []
+    logger.info(`获取模型---${models}`)
     models = models.map((model) => {
       const config = getModelConfig(model.id)
       if (config) {
