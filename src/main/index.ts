@@ -19,9 +19,7 @@ if (process.platform === 'darwin') {
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.lune.aichat') //设置应用id
   logger.info('app启动')
-  logger.warn('cceshishi ')
-  logger.warn('13dfa ', '测试吃饿')
-  logger.warn('13dfa ', '测试吃饿', '12ksdf ', Date.now())
+
   scheduledDelLog()
   // TODO 系统代理   proxyConfig.resolveProxy() 未添加
 

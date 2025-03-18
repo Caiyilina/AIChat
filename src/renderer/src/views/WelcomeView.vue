@@ -44,7 +44,11 @@
             <a-form-item label="API地址" name="baseUrl">
               <a-input v-model:value="providerForm.baseUrl" />
             </a-form-item>
-            <a-form-item label="API密钥" name="apiKey">
+            <a-form-item
+              v-if="providerForm.selectedProvider !== 'ollama'"
+              label="API密钥"
+              name="apiKey"
+            >
               <a-input v-model:value="providerForm.apiKey" />
             </a-form-item>
             <a-form-item>
@@ -327,7 +331,7 @@ const validateLink = async () => {
   })
   const res = await settingsStore.checkModel(providerForm.selectedProvider)
   console.log('验证链接--的结果', res)
-  if (res.isOk) {
+  if (res?.isOk) {
     Modal.success({
       title: '成功',
       content: '链接验证成功'

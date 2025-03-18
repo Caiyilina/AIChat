@@ -60,6 +60,8 @@ export const useSettingsStore = defineStore('settings', () => {
     if (providers.value.some((p) => p.id === 'ollama')) {
       await refreshOllamaModels()
     }
+    // 设置事件监听
+    setupProviderListener()
   }
   // 监听 provider 设置变化
   const setupProviderListener = () => {
@@ -73,19 +75,8 @@ export const useSettingsStore = defineStore('settings', () => {
       CONFIG_EVENTS.MODEL_LIST_CHANGED,
       async (_event, providerId: string) => {
         // 只刷新指定的provider模型，而不是所有模型
-        if (providerId) {
-          await refreshProviderModels(providerId)
-        } else {
-          // 兼容旧代码，如果没有提供providerId，则刷新所有模型
-          await refreshAllModels()
-        }
-      }
-    )
-    // 监听配置中的模型列表变更事件
-    window.electron.ipcRenderer.on(
-      CONFIG_EVENTS.MODEL_LIST_CHANGED,
-      async (_event, providerId: string) => {
-        // 只刷新指定的provider模型，而不是所有模型
+        console.log('监听模型列表更新事件  ---', providerId)
+
         if (providerId) {
           await refreshProviderModels(providerId)
         } else {
@@ -159,8 +150,12 @@ export const useSettingsStore = defineStore('settings', () => {
     try {
       // 获取在线模型
       let models = await configPresenter.getProviderModels(providerId)
+      console.log('refreshProviderModels ---', providerId, models, 'models')
+
       if (!models || models.length === 0) {
         const modelMetas = await llmP.getModelList(providerId)
+        console.log('refreshProviderModels  ---', providerId, modelMetas, 'modelMetas')
+
         if (modelMetas) {
           models = modelMetas.map((meta) => ({
             id: meta.id,
@@ -257,8 +252,11 @@ export const useSettingsStore = defineStore('settings', () => {
 
     // 刷新 Ollama 模型
     if (activeProviders.some((p) => p.id === 'ollama')) {
+      console.log('刷新 Ollama 模型')
+
       await refreshOllamaModels()
     }
+    console.log('刷新所有服务商active', activeProviders)
 
     for (const provider of activeProviders) {
       // 如果是 Ollama 提供者，已经在 refreshOllamaModels 中处理过了
@@ -300,6 +298,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
         // 获取自定义模型
         const customModelsList = await llmP.getCustomModels(provider.id)
+
         // 获取自定义模型状态并合并
         const customModelsWithStatus = await Promise.all(
           customModelsList.map(async (model) => {
@@ -337,6 +336,12 @@ export const useSettingsStore = defineStore('settings', () => {
         const findAllProviderModelIndex = allProviderModels.value.findIndex(
           (item) => item.providerId === provider.id
         )
+        console.log(
+          allModels,
+          'allModels======findAllProviderModelIndex',
+          findAllProviderModelIndex
+        )
+
         if (findAllProviderModelIndex !== -1) {
           allProviderModels.value[findAllProviderModelIndex].models = allModels
         } else {
@@ -406,6 +411,76 @@ export const useSettingsStore = defineStore('settings', () => {
     // 如果 provider 的启用状态发生变化，刷新模型列表
     if (provider.enable !== providers.value.find((p) => p.id === id)?.enable) {
       await refreshAllModels()
+    }
+  }
+  // 删除Provider
+  const removeProvider = async (providerId: string): Promise<void> => {
+    try {
+      const currentProviders = await configPresenter.getProviders()
+      const filteredProviders = currentProviders.filter((p) => p.id !== providerId)
+      await configPresenter.setProviders(filteredProviders)
+      providers.value = filteredProviders
+      await refreshAllModels()
+    } catch (error) {
+      console.error('Failed to remove provider:', error)
+      throw error
+    }
+  }
+  const enableAllModels = async (providerId: string): Promise<void> => {
+    try {
+      // 获取提供商的所有模型
+      const providerModelsData = allProviderModels.value.find((p) => p.providerId === providerId)
+      if (!providerModelsData || providerModelsData.models.length === 0) {
+        console.warn(`No models found for provider ${providerId}`)
+        return
+      }
+
+      // 对每个模型执行启用操作
+      for (const model of providerModelsData.models) {
+        if (!model.enabled) {
+          await llmP.updateModelStatus(providerId, model.id, true)
+          // 注意：不需要调用refreshAllModels，因为model-status-changed事件会更新UI
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to enable all models for provider ${providerId}:`, error)
+      throw error
+    }
+  }
+  // 禁用指定提供商下的所有模型
+  const disableAllModels = async (providerId: string): Promise<void> => {
+    try {
+      // 获取提供商的所有模型
+      const providerModelsData = allProviderModels.value.find((p) => p.providerId === providerId)
+      if (!providerModelsData || providerModelsData.models.length === 0) {
+        console.warn(`No models found for provider ${providerId}`)
+        return
+      }
+
+      // 获取自定义模型
+      const customModelsData = customModels.value.find((p) => p.providerId === providerId)
+
+      // 对每个模型执行禁用操作
+      const standardModels = providerModelsData.models
+      for (const model of standardModels) {
+        if (model.enabled) {
+          await llmP.updateModelStatus(providerId, model.id, false)
+          // 注意：不需要调用refreshAllModels，因为model-status-changed事件会更新UI
+        }
+      }
+
+      // 处理自定义模型
+      if (customModelsData) {
+        for (const model of customModelsData.models) {
+          if (model.enabled) {
+            await llmP.updateModelStatus(providerId, model.id, false)
+            // 注意：不需要调用refreshAllModels，因为model-status-changed事件会更新UI
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to disable all models for provider ${providerId}:`, error)
+      throw error
     }
   }
 
@@ -641,6 +716,9 @@ export const useSettingsStore = defineStore('settings', () => {
     refreshAllModels,
     refreshProviderModels,
     initOrUpdateSearchAssistantModel,
+    removeProvider,
+    enableAllModels,
+    disableAllModels,
     ollamaRunningModels,
     ollamaLocalModels,
     ollamaPullingModels,

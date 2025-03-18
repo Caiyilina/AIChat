@@ -111,29 +111,29 @@ export class Presenter implements IPresenter {
       // this.llamaCppPresenter.setMainwindow(this.windowPresenter.mainWindow)
     }
     // 持久化 LLMProviderPresenter 的 Providers 数据
-    // const providers = this.configPresenter.getProviders()
-    // this.llmproviderPresenter.setProviders(providers)
-
+    const providers = this.configPresenter.getProviders()
+    this.llmproviderPresenter.setProviders(providers)
+    logger.info('init', [...providers])
     // 同步所有 provider 的自定义模型
     this.syncCustomModels()
   }
 
   private async syncCustomModels(): Promise<void> {
-    // const providers = this.configPresenter.getProviders()
-    // for (const provider of providers) {
-    //   if (provider.enable) {
-    //     const customModels = this.configPresenter.getCustomModels(provider.id)
-    //     console.log('syncCustomModels', provider.id, customModels)
-    //     for (const model of customModels) {
-    //       await this.llmproviderPresenter.addCustomModel(provider.id, {
-    //         id: model.id,
-    //         name: model.name,
-    //         contextLength: model.contextLength,
-    //         maxTokens: model.maxTokens
-    //       })
-    //     }
-    //   }
-    // }
+    const providers = this.configPresenter.getProviders()
+    for (const provider of providers) {
+      if (provider.enable) {
+        const customModels = this.configPresenter.getCustomModels(provider.id)
+        logger.info('syncCustomModels', provider.id, customModels)
+        for (const model of customModels) {
+          await this.llmproviderPresenter.addCustomModel(provider.id, {
+            id: model.id,
+            name: model.name,
+            contextLength: model.contextLength,
+            maxTokens: model.maxTokens
+          })
+        }
+      }
+    }
   }
 
   // 在应用退出时关闭数据库连接
@@ -153,7 +153,7 @@ ipcMain.handle(
         return
       }
       if (!calledPresenter[method]) {
-        logger.warn(`calling wrong presenter method :${name}, ${method}`)
+        logger.warn(`calling wrong presenter method :${name}, 方法:${method}`)
         return
       }
       return calledPresenter[method](...payloads)

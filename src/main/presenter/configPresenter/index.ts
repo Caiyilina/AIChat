@@ -75,10 +75,66 @@ export class ConfigPresenter implements IConfigPresenter {
     // 如果版本号不存在或低于当前版本，执行数据迁移
     if (!storedAppVersion || compare(storedAppVersion, this.currentAppVersion, '<')) {
       // TODO 适配用的，不一定需要 迁移旧的模型数据
-      // this.migrateModelData()
+      this.migrateModelData()
 
       // 更新存储的应用版本号
       this.setSetting('appVersion', this.currentAppVersion)
+    }
+  }
+  private migrateModelData(): void {
+    // 迁移旧的模型数据
+    const providers = this.getProviders()
+
+    for (const provider of providers) {
+      // 检查并修正 ollama 的 baseUrl
+      if (provider.id === 'ollama' && provider.baseUrl) {
+        if (provider.baseUrl.endsWith('/v1')) {
+          provider.baseUrl = provider.baseUrl.replace(/\/v1$/, '')
+          // 保存修改后的提供者
+          this.setProviderById('ollama', provider)
+        }
+      }
+
+      // 迁移provider模型
+      const oldProviderModelsKey = `${provider.id}_models`
+      const oldModels = this.getSetting<(MODEL_META & { enabled: boolean })[]>(oldProviderModelsKey)
+
+      if (oldModels && oldModels.length > 0) {
+        const store = this.getProviderModelStore(provider.id)
+        // 遍历旧模型，保存启用状态
+        oldModels.forEach((model) => {
+          if (model.enabled) {
+            this.setModelStatus(provider.id, model.id, true)
+          }
+          // @ts-ignore - 需要删除enabled属性以便独立存储状态
+          delete model.enabled
+        })
+        // 保存模型列表到新存储
+        store.set('models', oldModels)
+        // 清除旧存储
+        this.store.delete(oldProviderModelsKey)
+      }
+
+      // 迁移custom模型
+      const oldCustomModelsKey = `custom_models_${provider.id}`
+      const oldCustomModels =
+        this.getSetting<(MODEL_META & { enabled: boolean })[]>(oldCustomModelsKey)
+
+      if (oldCustomModels && oldCustomModels.length > 0) {
+        const store = this.getProviderModelStore(provider.id)
+        // 遍历旧的自定义模型，保存启用状态
+        oldCustomModels.forEach((model) => {
+          if (model.enabled) {
+            this.setModelStatus(provider.id, model.id, true)
+          }
+          // @ts-ignore - 需要删除enabled属性以便独立存储状态
+          delete model.enabled
+        })
+        // 保存自定义模型列表到新存储
+        store.set('custom_models', oldCustomModels)
+        // 清除旧存储
+        this.store.delete(oldCustomModelsKey)
+      }
     }
   }
   getDefaultProviders(): LLM_PROVIDER[] {
@@ -163,7 +219,7 @@ export class ConfigPresenter implements IConfigPresenter {
   getProviderModels(providerId: string): MODEL_META[] {
     const store = this.getProviderModelStore(providerId)
     let models = store.get('models') || []
-    logger.info(`获取模型---${models}`)
+    logger.info(providerId, `获取模型---${models.length}`)
     models = models.map((model) => {
       const config = getModelConfig(model.id)
       if (config) {
@@ -172,6 +228,7 @@ export class ConfigPresenter implements IConfigPresenter {
       }
       return model
     })
+    logger.info(`获取模型---map--${[models.length]}`)
     return models
   }
   /**
@@ -181,6 +238,7 @@ export class ConfigPresenter implements IConfigPresenter {
    */
   setProviderModels(providerId: string, models: MODEL_META[]): void {
     const store = this.getProviderModelStore(providerId)
+    logger.info(providerId, `保存模型 模型---${[models.length]}`)
     store.set('models', models)
   }
   getEnabledProviders(): LLM_PROVIDER[] {
@@ -226,10 +284,12 @@ export class ConfigPresenter implements IConfigPresenter {
   }
   getCustomModels(providerId: string): MODEL_META[] {
     const store = this.getProviderModelStore(providerId)
+    logger.info(`${providerId}:获取模型---${[...store.get('custom_models')]}`)
     return store.get('custom_models') || []
   }
   setCustomModels(providerId: string, models: MODEL_META[]): void {
     const store = this.getProviderModelStore(providerId)
+    logger.info(`${providerId}:设置模型---${[...models]}`)
     store.set('custom_models', models)
   }
   addCustomModel(providerId: string, model: MODEL_META): void {
@@ -307,6 +367,7 @@ export class ConfigPresenter implements IConfigPresenter {
           custom_models: []
         }
       })
+      logger.info(` 初始化模型存储 ${providerId}`)
       this.providersModelStores.set(providerId, store)
     }
 

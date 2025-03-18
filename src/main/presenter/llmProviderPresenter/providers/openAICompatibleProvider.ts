@@ -16,6 +16,9 @@ export class OpenAICompatibleProvider extends BaseLLMProvider {
 
   constructor(provider: LLM_PROVIDER, configPresenter: ConfigPresenter) {
     super(provider, configPresenter)
+    logger.info(
+      `OpenAICompatibleProvider constructor, provider: ${provider.id}, baseUrl: ${provider.baseUrl}`
+    )
     this.openai = new OpenAI({
       apiKey: this.provider.apiKey,
       baseURL: this.provider.baseUrl
@@ -33,7 +36,11 @@ export class OpenAICompatibleProvider extends BaseLLMProvider {
       logger.info(`Provider ${this.provider.name} does not support OpenAI models API`)
       return this.models
     }
-    return this.fetchOpenAIModels(options)
+    const data = await this.fetchOpenAIModels(options)
+    logger.info(
+      `实现抽象方法fetchProviderModels ---Fetching models for provider:数量：${data.length}== ${[...(await data).values()][0].name},22--${[...(await data).values()][1].name}`
+    )
+    return data
   }
 
   /**
@@ -43,7 +50,9 @@ export class OpenAICompatibleProvider extends BaseLLMProvider {
    */
   protected async fetchOpenAIModels(options?: { timeout: number }): Promise<MODEL_META[]> {
     const response = await this.openai.models.list(options)
-    logger.info(`openai-获取模型列表--${[...response?.data]}`)
+    logger.info(
+      `fetchOpenAIModels-- ,-获取模型列表--${[response?.data.length]}, 第一条 ${response?.data[0].id}`
+    )
     return response.data.map((model) => ({
       id: model.id,
       name: model.id,
@@ -300,7 +309,7 @@ export class OpenAICompatibleProvider extends BaseLLMProvider {
         const models = await this.fetchOpenAIModels({
           timeout: 3000
         })
-        logger.info(`检查模型是否可用--`, models)
+        logger.info(`检查模型是否可用--`, [...models], '第一条', models[0].id)
         this.models = models
         // 避免在这里触发事件，而是通过ConfigPresenter来管理模型更新
       }

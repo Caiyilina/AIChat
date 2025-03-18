@@ -35,6 +35,7 @@ export abstract class BaseLLMProvider {
   protected async init() {
     if (this.provider.enable) {
       try {
+        logger.info(`Initializing provider:${this.provider.name}`)
         await this.fetchModels()
         // 检查是否需要自动启用所有模型
         await this.autoEnableModelsIfNeeded()
@@ -80,11 +81,11 @@ export abstract class BaseLLMProvider {
   public async fetchModels(): Promise<MODEL_META[]> {
     try {
       const models = await this.fetchProviderModels()
-      console.log('Fetched models:', models?.length)
+      logger.info(this.provider.id, 'Fetched models:', models?.length)
       this.models = models
       return models
     } catch (e) {
-      console.error('Failed to fetch models:', e)
+      logger.error('Failed to fetch models:', e)
       if (!this.models) {
         this.models = []
       }

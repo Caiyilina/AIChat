@@ -16,6 +16,7 @@ import { OllamaProvider } from './providers/ollamaProvider'
 import { OpenAICompatibleProvider } from './providers/openAICompatibleProvider'
 import { eventBus } from '@/eventbus'
 import { OLLAMA_EVENTS, STREAM_EVENTS } from '@/event'
+import { log } from 'console'
 
 // 流的状态
 interface StreamState {
@@ -45,6 +46,9 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     maxConcurrentStreams: 10
   }
   private configPresenter: ConfigPresenter
+
+  // 目前支持的服务商
+  private supportedProviders: Set<string> = new Set(['openai', 'deepseek', 'ollama'])
   constructor(configPresenter: ConfigPresenter) {
     this.configPresenter = configPresenter
     this.init()
@@ -121,32 +125,45 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     }
   }
 
-  private getProviderInstance(providerId: string): BaseLLMProvider {
+  private getProviderInstance(providerId: string): BaseLLMProvider | null {
     let instance = this.providerInstances.get(providerId)
-    if (!instance) {
-      const provider = this.getProviderById(providerId)
-      switch (provider.id) {
-        case 'openai':
-          instance = new OpenAIProvider(provider, this.configPresenter)
-          break
-        case 'deepseek':
-          instance = new DeepseekProvider(provider, this.configPresenter)
-          break
-        case 'ollama':
-          instance = new OllamaProvider(provider, this.configPresenter)
-          break
+    try {
+      if (!instance) {
+        const provider = this.getProviderById(providerId)
 
-        default:
-          instance = new OpenAICompatibleProvider(provider, this.configPresenter)
-          break
+        // 检测是否支持服务商
+        if (!this.supportedProviders.has(provider.id)) {
+          logger.error(`Provider ${provider.id} not supported`)
+          throw new Error(`Provider ${provider.id} not supported`)
+        }
+        switch (provider.id) {
+          case 'openai':
+            instance = new OpenAIProvider(provider, this.configPresenter)
+            break
+          case 'deepseek':
+            instance = new DeepseekProvider(provider, this.configPresenter)
+            break
+          // case 'ollama':
+          //   instance = new OllamaProvider(provider, this.configPresenter)
+          //   break
+          default:
+            instance = new OpenAICompatibleProvider(provider, this.configPresenter)
+            break
+        }
+        logger.info(`获取服务商实例对象--`, providerId)
+        this.providerInstances.set(providerId, instance)
       }
-      logger.info(`获取服务商实例对象--`, instance)
-      this.providerInstances.set(providerId, instance)
+      return instance
+    } catch (error) {
+      return null
     }
-    return instance
   }
   async getModelList(providerId: string): Promise<MODEL_META[]> {
     const provider = this.getProviderInstance(providerId)
+    if (!provider) {
+      logger.error(`Provider ${providerId} not found, can't get model list`)
+      return []
+    }
     let models = await provider.fetchModels()
     models = models.map((model) => {
       const config = getModelConfig(model.id)
@@ -156,6 +173,7 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
       }
       return model
     })
+    logger.info(`llmp-getModelList-获取服务商模型列表--`, providerId, models.length)
     return models
   }
   async updateModelStatus(providerId: string, modelId: string, enabled: boolean): Promise<void> {
@@ -186,6 +204,7 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
   private canStartNewStream(): boolean {
     return this.activeStreams.size < this.config.maxConcurrentStreams
   }
+
   private async handleStreamOperation(
     operation: () => Promise<void>,
     eventId: string,
@@ -201,6 +220,10 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     }
 
     const provider = this.getProviderInstance(providerId)
+    if (!provider) {
+      logger.error(`Provider ${providerId} not found, can't start stream--handleStreamOperation`)
+      return
+    }
     const abortController = new AbortController()
 
     // 创建新的流状态
@@ -236,6 +259,10 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     }
 
     const provider = this.getProviderInstance(providerId)
+    if (!provider) {
+      logger.error(`Provider ${providerId} not found, can't start stream--startStreamCompletion`)
+      return
+    }
     const abortController = new AbortController()
 
     this.activeStreams.set(eventId, {
@@ -344,9 +371,12 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     modelId: string,
     temperature?: number,
     maxTokens?: number
-  ): Promise<string> {
+  ): Promise<string | null> {
     console.log('generateCompletion', providerId, modelId, temperature, maxTokens)
     const provider = this.getProviderInstance(providerId)
+    if (!provider) {
+      return null
+    }
     const response = await provider.completions(messages, modelId, temperature, maxTokens)
     return response.content
   }
@@ -356,8 +386,11 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     modelId: string,
     temperature?: number,
     maxTokens?: number
-  ): Promise<LLMResponse> {
+  ): Promise<LLMResponse | null> {
     const provider = this.getProviderInstance(providerId)
+    if (!provider) {
+      return null
+    }
     return provider.summaries(text, modelId, temperature, maxTokens)
   }
 
@@ -367,8 +400,11 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     modelId: string,
     temperature?: number,
     maxTokens?: number
-  ): Promise<LLMResponse> {
+  ): Promise<LLMResponse | null> {
     const provider = this.getProviderInstance(providerId)
+    if (!provider) {
+      return null
+    }
     return provider.generateText(prompt, modelId, temperature, maxTokens)
   }
   async generateSuggestions(
@@ -377,8 +413,11 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     modelId: string,
     temperature?: number,
     maxTokens?: number
-  ): Promise<string[]> {
+  ): Promise<string[] | null> {
     const provider = this.getProviderInstance(providerId)
+    if (!provider) {
+      return null
+    }
     return provider.suggestions(context, modelId, temperature, maxTokens)
   }
   // 配置相关方法
@@ -392,6 +431,7 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
 
   async check(providerId: string): Promise<{ isOk: boolean; errorMsg: string | null }> {
     const provider = this.getProviderInstance(providerId)
+    logger.info('check--检测', provider)
     if (!provider) {
       return {
         isOk: false,
@@ -454,7 +494,7 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
   listOllamaModels(): Promise<OllamaModel[]> {
     const provider = this.getOllamaProviderInstance()
     if (!provider) {
-      console.error('Ollama provider not found')
+      logger.error('Ollama provider not found')
       return Promise.resolve([])
     }
     return provider.listModels()
@@ -469,7 +509,7 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
   listOllamaRunningModels(): Promise<OllamaModel[]> {
     const provider = this.getOllamaProviderInstance()
     if (!provider) {
-      console.error('Ollama provider not found')
+      logger.error('Ollama provider not found')
       return Promise.resolve([])
     }
     return provider.listRunningModels()
