@@ -294,7 +294,7 @@ const previousStep = () => {
 }
 const handleStart = () => {
   // 完成
-  // configPresenter.setSetting('init_complete', true) //初始化完成
+  configPresenter.setSetting('init_complete', true) //初始化完成
   if (!providerModels.value || providerModels.value.length == 0) {
     // 没有模型信息，去设置
     console.log('没有模型信息')
