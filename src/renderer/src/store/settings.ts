@@ -141,7 +141,23 @@ export const useSettingsStore = defineStore('settings', () => {
       }
     }
   }
+  // 更新模型状态
+  const updateModelStatus = async (providerId: string, modelId: string, enabled: boolean) => {
+    console.log('updateModelStatus---')
 
+    try {
+      await llmP.updateModelStatus(providerId, modelId, enabled)
+      console.log('更新模型状态---')
+
+      // 注意：这里不再调用refreshAllModels，因为会通过model-status-changed事件更新本地状态
+    } catch (error) {
+      console.error('Failed to update model status:', error)
+    }
+  }
+
+  const checkProvider = async (providerId: string) => {
+    return await llmP.check(providerId)
+  }
   // 优化刷新模型列表的逻辑
   const refreshProviderModels = async (providerId: string): Promise<void> => {
     const provider = providers.value.find((p) => p.id === providerId)
@@ -715,6 +731,7 @@ export const useSettingsStore = defineStore('settings', () => {
     searchModels,
     refreshAllModels,
     refreshProviderModels,
+    checkProvider,
     initOrUpdateSearchAssistantModel,
     removeProvider,
     enableAllModels,
@@ -724,6 +741,7 @@ export const useSettingsStore = defineStore('settings', () => {
     ollamaPullingModels,
     refreshOllamaModels,
     checkModel,
+    updateModelStatus,
     updateTheme,
     updateLanguage,
     searchAssistantModelRef,

@@ -3,7 +3,7 @@
     <a-card class="w-full max-w-2xl shadow-md" hoverable>
       <!-- 标题 -->
       <template #title>
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-4 pt-6">
           <Icon :icon="steps[currentStep].icon" class="w-8 h-8 text-primary" />
           <div>
             <h2 class="text-2xl font-bold">{{ steps[currentStep].title }}</h2>
@@ -67,7 +67,19 @@
             </template>
             <!-- 2、模型同步完成，显示模型列表 -->
             <template v-else-if="!providerModelLoading && providerModels.length > 0">
-              <div>模型列表：{{ providerModels.length }}</div>
+              <div
+                class="flex flex-col w-full border overflow-hidden rounded-lg max-h-80 overflow-y-auto"
+              >
+                <template v-for="model in providerModels" :key="model.id">
+                  <ModelConfigItem
+                    :model-name="model.name"
+                    :model-id="model.id"
+                    :group="model.group"
+                    :enabled="model.enabled ?? false"
+                    @enabled-change="handleModelEnabledChange(model, $event)"
+                  ></ModelConfigItem>
+                </template>
+              </div>
             </template>
             <!-- 3、模型同步失败 -->
             <template v-else>
@@ -78,7 +90,13 @@
             </template>
           </div>
         </template>
-        <template v-else> </template>
+        <template v-else>
+          <div class="text-center space-y-4">
+            <Icon icon="lucide:party-popper" class="w-16 h-16 mx-auto text-primary" />
+            <h3 class="text-xl font-semibold">全部完成</h3>
+            <p class="text-muted-foreground">您已完成设置过程！</p>
+          </div>
+        </template>
       </div>
       <!-- 操作 -->
       <template #actions>
@@ -99,6 +117,7 @@
             @click="nextStep"
             type="primary"
             size="small"
+            :disabled="providerModelLoading"
           >
             下一步<Icon icon="lucide:arrow-right" class="w-4 h-4 ml-2" />
           </a-button>
@@ -122,9 +141,11 @@
 import logo from '@/assets/logo.png'
 import { computed, nextTick, onMounted, reactive, ref, toRaw, watch } from 'vue'
 import { Icon } from '@iconify/vue'
+import ModelConfigItem from '@/components/settings/ModelConfigItem.vue'
 import type { Rule } from 'ant-design-vue/es/form'
 import { Modal } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
+import { MODEL_META } from '@shared/presenter'
 import { usePresenter } from '@/composables/usePresenter'
 import { useSettingsStore } from '@/store/settings'
 import ModelIcon from '@/components/icons/ModelIcon.vue'
@@ -343,7 +364,14 @@ const validateLink = async () => {
     })
   }
 }
-
+const handleModelEnabledChange = async (model: MODEL_META, enabled: boolean) => {
+  try {
+    await settingsStore.updateModelStatus(providerForm.selectedProvider, model.id, !enabled)
+  } catch (error) {
+    console.error('Failed to disable model:', error)
+  }
+  console.log('handleModelEnabledChange', model, enabled)
+}
 const isFirstStep = computed(() => currentStep.value === 0)
 const isLastStep = computed(() => currentStep.value === steps.length - 1)
 onMounted(() => {
