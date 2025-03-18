@@ -215,6 +215,120 @@ export interface ILlmProviderPresenter {
   pullOllamaModels(modelName: string): Promise<boolean>
   deleteOllamaModel(modelName: string): Promise<boolean>
 }
+
+/**
+ * 对话和消息处理类
+ */
+export interface IThreadPresenter {
+  // 基本对话操作
+  createConversation(title: string, settings?: Partial<CONVERSATION_SETTINGS>): Promise<string>
+  deleteConversation(conversationId: string): Promise<void>
+  getConversation(conversationId: string): Promise<CONVERSATION>
+  renameConversation(conversationId: string, title: string): Promise<CONVERSATION>
+  updateConversationTitle(conversationId: string, title: string): Promise<void>
+  updateConversationSettings(
+    conversationId: string,
+    settings: Partial<CONVERSATION_SETTINGS>
+  ): Promise<void>
+
+  // 对话列表和激活状态
+  getConversationList(
+    page: number,
+    pageSize: number
+  ): Promise<{ total: number; list: CONVERSATION[] }>
+  setActiveConversation(conversationId: string): Promise<void>
+  getActiveConversation(): Promise<CONVERSATION | null>
+
+  getSearchResults(messageId: string): Promise<SearchResult[]>
+  clearAllMessages(conversationId: string): Promise<void>
+
+  // 消息操作
+  getMessages(
+    conversationId: string,
+    page: number,
+    pageSize: number
+  ): Promise<{ total: number; list: MESSAGE[] }>
+  sendMessage(conversationId: string, content: string, role: MESSAGE_ROLE): Promise<MESSAGE | null>
+  startStreamCompletion(conversationId: string, queryMsgId?: string): Promise<void>
+  editMessage(messageId: string, content: string): Promise<MESSAGE>
+  deleteMessage(messageId: string): Promise<void>
+  retryMessage(messageId: string, modelId?: string): Promise<MESSAGE>
+  getMessage(messageId: string): Promise<MESSAGE>
+  getMessageVariants(messageId: string): Promise<MESSAGE[]>
+  updateMessageStatus(messageId: string, status: MESSAGE_STATUS): Promise<void>
+  updateMessageMetadata(messageId: string, metadata: Partial<MESSAGE_METADATA>): Promise<void>
+  getMessageExtraInfo(messageId: string, type: string): Promise<Record<string, unknown>[]>
+
+  // 上下文控制
+  getContextMessages(conversationId: string): Promise<MESSAGE[]>
+  clearContext(conversationId: string): Promise<void>
+  markMessageAsContextEdge(messageId: string, isEdge: boolean): Promise<void>
+  summaryTitles(modelId?: string): Promise<string>
+  clearActiveThread(): Promise<void>
+  stopMessageGeneration(messageId: string): Promise<void>
+  getSearchEngines(): SearchEngineTemplate[]
+  getActiveSearchEngine(): SearchEngineTemplate
+  setActiveSearchEngine(engineName: string): void
+  // 搜索助手模型设置
+  setSearchAssistantModel(model: MODEL_META, providerId: string): void
+  getMainMessageByParentId(conversationId: string, parentId: string): Promise<Message | null>
+  destroy(): void
+}
+
+// 消息类型、 消息角色
+export type MESSAGE_STATUS = 'sent' | 'pending' | 'error'
+export type MESSAGE_ROLE = 'user' | 'assistant' | 'system' | 'function'
+
+// 消息元数据
+export type MESSAGE_METADATA = {
+  totalTokens: number
+  inputTokens: number
+  outputTokens: number
+  generationTime: number
+  firstTokenTime: number
+  tokensPerSecond: number
+  model?: string
+  provider?: string
+  reasoningStartTime?: number
+  reasoningEndTime?: number
+}
+/**
+ * 消息管理类
+ */
+export interface IMessageManager {
+  // 基本消息操作
+  sendMessage(
+    conversationId: string,
+    content: string,
+    role: MESSAGE_ROLE,
+    parentId: string,
+    isVariant: boolean,
+    metadata: MESSAGE_METADATA
+  ): Promise<MESSAGE>
+  editMessage(messageId: string, content: string): Promise<MESSAGE>
+  deleteMessage(messageId: string): Promise<void>
+  retryMessage(messageId: string, metadata: MESSAGE_METADATA): Promise<MESSAGE>
+
+  // 消息查询
+  getMessage(messageId: string): Promise<MESSAGE>
+  getMessageVariants(messageId: string): Promise<MESSAGE[]>
+  getMessageThread(
+    conversationId: string,
+    page: number,
+    pageSize: number
+  ): Promise<{
+    total: number
+    list: MESSAGE[]
+  }>
+  getContextMessages(conversationId: string, contextLength: number): Promise<MESSAGE[]>
+
+  // 消息状态管理
+  updateMessageStatus(messageId: string, status: MESSAGE_STATUS): Promise<void>
+  updateMessageMetadata(messageId: string, metadata: Partial<MESSAGE_METADATA>): Promise<void>
+
+  // 上下文管理
+  markMessageAsContextEdge(messageId: string, isEdge: boolean): Promise<void>
+}
 /**
  * 全局管理类
  */
@@ -223,6 +337,7 @@ export interface IPresenter {
   devicePresenter: IDevicePresenter
   configPresenter: IConfigPresenter
   llmproviderPresenter: ILlmProviderPresenter
+  threadPresenter: IThreadPresenter
 }
 
 // 根据 Ollama SDK 定义模型接口
