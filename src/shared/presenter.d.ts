@@ -362,3 +362,38 @@ export interface ProgressResponse {
   total?: number
   completed?: number
 }
+
+export interface SearchResult {
+  title: string
+  url: string
+  rank: number
+  content?: string
+  icon?: string
+  description?: string
+}
+
+export interface ISearchPresenter {
+  init(): void
+  search(query: string, engine: 'google' | 'baidu'): Promise<SearchResult[]>
+}
+
+export type FileOperation = {
+  path: string
+  content?: string
+}
+
+export interface IFilePresenter {
+  readFile(relativePath: string): Promise<string>
+  writeFile(operation: FileOperation): Promise<void>
+  deleteFile(relativePath: string): Promise<void>
+  prepareFile(absPath: string): Promise<MessageFile>
+  onFileRemoved(filePath: string): Promise<boolean>
+}
+export interface FileMetaData {
+  fileName: string
+  fileSize: number
+  // fileHash: string
+  fileDescription?: string
+  fileCreated: Date
+  fileModified: Date
+}

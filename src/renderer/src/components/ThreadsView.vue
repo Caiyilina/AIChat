@@ -3,10 +3,10 @@
     <div>
       <a-button
         variant="outline"
-        size="small"
-        class="w-full text-xs text-muted-foreground justify-start gap-2"
+        class="w-full text-xs text-muted-foreground flex justify-start items-center gap-2"
       >
-        <Icon icon="lucide:pen-line" class="h-4 w-4" /> 新会话
+        <Icon icon="lucide:pen-line" class="h-4 w-4 mr-2" />
+        <span>新会话</span>
       </a-button>
     </div>
   </div>
