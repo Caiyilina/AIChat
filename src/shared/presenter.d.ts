@@ -292,6 +292,73 @@ export type MESSAGE_METADATA = {
   reasoningStartTime?: number
   reasoningEndTime?: number
 }
+export type SQLITE_MESSAGE = {
+  id: string
+  conversation_id: string
+  parent_id?: string
+  role: MESSAGE_ROLE
+  content: string
+  created_at: number
+  order_seq: number
+  token_count: number
+  status: MESSAGE_STATUS
+  metadata: string // JSON string of MESSAGE_METADATA
+  is_context_edge: number // 0 or 1
+  is_variant: number
+  variants?: SQLITE_MESSAGE[]
+}
+export interface ISQLitePresenter {
+  close(): void
+  createConversation(title: string, settings?: Partial<CONVERSATION_SETTINGS>): Promise<string>
+  deleteConversation(conversationId: string): Promise<void>
+  renameConversation(conversationId: string, title: string): Promise<CONVERSATION>
+  getConversation(conversationId: string): Promise<CONVERSATION>
+  updateConversation(conversationId: string, data: Partial<CONVERSATION>): Promise<void>
+  getConversationList(
+    page: number,
+    pageSize: number
+  ): Promise<{ total: number; list: CONVERSATION[] }>
+  insertMessage(
+    conversationId: string,
+    content: string,
+    role: string,
+    parentId: string,
+    metadata: string,
+    orderSeq: number,
+    tokenCount: number,
+    status: string,
+    isContextEdge: number,
+    isVariant: number
+  ): Promise<string>
+  queryMessages(conversationId: string): Promise<Array<SQLITE_MESSAGE>>
+  deleteAllMessages(): Promise<void>
+  runTransaction(operations: () => void): Promise<void>
+
+  // 新增的消息管理方法
+  getMessage(messageId: string): Promise<SQLITE_MESSAGE | null>
+  getMessageVariants(messageId: string): Promise<SQLITE_MESSAGE[]>
+  updateMessage(
+    messageId: string,
+    data: {
+      content?: string
+      status?: string
+      metadata?: string
+      isContextEdge?: number
+      tokenCount?: number
+    }
+  ): Promise<void>
+  deleteMessage(messageId: string): Promise<void>
+  getMaxOrderSeq(conversationId: string): Promise<number>
+  addMessageAttachment(
+    messageId: string,
+    attachmentType: string,
+    attachmentData: string
+  ): Promise<void>
+  getMessageAttachments(messageId: string, type: string): Promise<{ content: string }[]>
+  getLastUserMessage(conversationId: string): Promise<SQLITE_MESSAGE | null>
+  getMainMessageByParentId(conversationId: string, parentId: string): Promise<SQLITE_MESSAGE | null>
+  deleteAllMessagesInConversation(conversationId: string): Promise<void>
+}
 /**
  * 消息管理类
  */

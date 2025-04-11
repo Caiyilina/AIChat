@@ -19,3 +19,10 @@ export const STREAM_EVENTS = {
   END: 'stream:end', // 替代 stream-end
   ERROR: 'stream:error' // 替代 stream-error
 }
+// 会话相关事件
+export const CONVERSATION_EVENTS = {
+  CREATED: 'conversation:created',
+  ACTIVATED: 'conversation:activated', // 替代 conversation-activated
+  DEACTIVATED: 'conversation:deactivated', // 替代 active-conversation-cleared
+  MESSAGE_EDITED: 'conversation:message-edited' // 替代 message-edited
+}
