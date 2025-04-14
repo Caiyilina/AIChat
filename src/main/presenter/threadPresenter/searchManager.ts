@@ -190,7 +190,7 @@ const defaultEngines: SearchEngineTemplate[] = [
  * 搜索引擎管理类
  * 执行网页搜索并提取结构化结果
  */
-export class SearchMessage {
+export class SearchManager {
   private searchWindows: Map<string, BrowserWindow> = new Map()
   private isDevelopment = process.env.NODE_ENV == 'development'
   private maxConcurrentSearches = 3

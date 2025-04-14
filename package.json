@@ -45,6 +45,7 @@
     "openai": "^4.87.3",
     "pinia": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
+    "tokenx": "^0.4.1",
     "vite-svg-loader": "^5.1.0",
     "vue-i18n": "^11.1.2",
     "vue-router": "^4.5.0"
