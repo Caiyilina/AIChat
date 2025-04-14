@@ -1,6 +1,20 @@
 import { BaseTable } from './baseTable'
 import type Database from 'better-sqlite3-multiple-ciphers'
 
+export const MESSAGE_FIELDS_NO_ID = `
+  conversation_id,
+  parent_id,
+  content,
+  role,
+  created_at,
+  order_seq,
+  token_count,
+  status,
+  metadata,
+  is_context_edge,
+  is_variant
+`
+
 /**
  * 消息表结构定义
  */

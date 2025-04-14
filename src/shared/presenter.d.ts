@@ -396,6 +396,26 @@ export interface IMessageManager {
   // 上下文管理
   markMessageAsContextEdge(messageId: string, isEdge: boolean): Promise<void>
 }
+export type CONVERSATION_SETTINGS = {
+  systemPrompt: string
+  temperature: number
+  contextLength: number
+  maxTokens: number
+  providerId: string
+  modelId: string
+  artifacts: 0 | 1
+}
+
+export type CONVERSATION = {
+  id: string
+  title: string
+  settings: CONVERSATION_SETTINGS
+  createdAt: number
+  updatedAt: number
+  is_new?: number
+  artifacts?: number
+}
+
 /**
  * 全局管理类
  */

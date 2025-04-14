@@ -125,39 +125,37 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     }
   }
 
-  private getProviderInstance(providerId: string): BaseLLMProvider | null {
+  private getProviderInstance(providerId: string): BaseLLMProvider {
     let instance = this.providerInstances.get(providerId)
-    try {
-      if (!instance) {
-        const provider = this.getProviderById(providerId)
 
-        // 检测是否支持服务商
-        if (!this.supportedProviders.has(provider.id)) {
-          logger.error(`Provider ${provider.id} not supported`)
-          throw new Error(`Provider ${provider.id} not supported`)
-        }
-        switch (provider.id) {
-          case 'openai':
-            instance = new OpenAIProvider(provider, this.configPresenter)
-            break
-          case 'deepseek':
-            instance = new DeepseekProvider(provider, this.configPresenter)
-            break
-          // case 'ollama':
-          //   instance = new OllamaProvider(provider, this.configPresenter)
-          //   break
-          default:
-            instance = new OpenAICompatibleProvider(provider, this.configPresenter)
-            break
-        }
-        logger.info(`获取服务商实例对象--`, providerId)
-        this.providerInstances.set(providerId, instance)
+    if (!instance) {
+      const provider = this.getProviderById(providerId)
+
+      // 检测是否支持服务商
+      if (!this.supportedProviders.has(provider.id)) {
+        logger.error(`Provider ${provider.id} not supported`)
+        throw new Error(`Provider ${provider.id} not supported`)
       }
-      return instance
-    } catch (error) {
-      return null
+      switch (provider.id) {
+        case 'openai':
+          instance = new OpenAIProvider(provider, this.configPresenter)
+          break
+        case 'deepseek':
+          instance = new DeepseekProvider(provider, this.configPresenter)
+          break
+        // case 'ollama':
+        //   instance = new OllamaProvider(provider, this.configPresenter)
+        //   break
+        default:
+          instance = new OpenAICompatibleProvider(provider, this.configPresenter)
+          break
+      }
+      logger.info(`获取服务商实例对象--`, providerId)
+      this.providerInstances.set(providerId, instance)
     }
+    return instance
   }
+
   async getModelList(providerId: string): Promise<MODEL_META[]> {
     const provider = this.getProviderInstance(providerId)
     if (!provider) {
@@ -371,12 +369,10 @@ export class LLMProviderPresenter implements ILlmProviderPresenter {
     modelId: string,
     temperature?: number,
     maxTokens?: number
-  ): Promise<string | null> {
-    console.log('generateCompletion', providerId, modelId, temperature, maxTokens)
+  ): Promise<string> {
+    logger.info('generateCompletion', providerId, modelId, temperature, maxTokens)
     const provider = this.getProviderInstance(providerId)
-    if (!provider) {
-      return null
-    }
+
     const response = await provider.completions(messages, modelId, temperature, maxTokens)
     return response.content
   }
